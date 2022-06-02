@@ -1,7 +1,7 @@
 {
   "name": "react-shdw-drive",
   "version": "0.1.1",
-  "description": "Interfaces for GenesysGo ShadowDrive",
+  "description": "Simple React Hook/Utils for GenesysGo ShadowDrive",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -38,10 +38,6 @@
     "@shadow-drive/sdk": "^2.0.3",
     "@project-serum/anchor": "^0.24.2",
     "@solana/spl-token": "^0.2.0"
-  },
-  "dependencies": {
-    "cross-fetch": "^3.1.5",
-    "form-data": "^4.0.0"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18",
