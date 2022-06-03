@@ -2,3 +2,5 @@ examples
 docs
 node_modules
 .DS_Store
+**/.yalc
+**/yalc.lock
