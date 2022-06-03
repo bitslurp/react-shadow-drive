@@ -1,11 +1,11 @@
-import "@project-serum/anchor";
 import { ShdwDrive, StorageAccountResponse } from "@shadow-drive/sdk";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  getFileAccount,
   getFileAccounts,
   getShadowDriveFileUrl,
-  ShdwFileAccount,
+  ShadowFileData,
 } from "../utils/shadow-drive";
 
 export type StorageAccountInfo = {
@@ -14,7 +14,7 @@ export type StorageAccountInfo = {
   storageUnit: string;
 };
 
-export type FilesRecord = Record<string, ShdwFileAccount[]>;
+export type FilesRecord = Record<string, ShadowFileData[]>;
 
 export type UseShadowDriveOptions = {
   /**
@@ -25,6 +25,10 @@ export type UseShadowDriveOptions = {
    * Invoked following successful file deletion flag being set
    */
   onFileDeleted?: () => void;
+  /**
+   * Invoked after file data has succsesfully been replaced
+   */
+  onFileReplaced?: () => void;
   /**
    * Invoked following multi file upload success
    */
@@ -45,9 +49,9 @@ export type UseShadowDriveReturnValue = {
    */
   loading: boolean;
   /**
-   * Ref object for in context file
+   * In context file
    */
-  selectedFileRef: React.MutableRefObject<ShdwFileAccount>;
+  selectedFile?: ShadowFileData;
   /**
    * The account response for the selected storage account
    */
@@ -59,7 +63,7 @@ export type UseShadowDriveReturnValue = {
   /**
    * Files belonging to currently selected storage account
    */
-  selectedAccountFiles?: ShdwFileAccount[];
+  selectedAccountFiles?: ShadowFileData[];
   /**
    * Array of storage accounts belonging to active wallet
    */
@@ -81,11 +85,21 @@ export type UseShadowDriveReturnValue = {
    */
   refreshAccounts: () => Promise<void>;
   /**
+   * Replace a file, assuming it's mutable, for a storage account
+   */
+  replaceFile: (file: File) => Promise<void>;
+  /**
    * Set the in context account response object.
    *
    * This context will be used for upload, delete requests etc
    */
   setSelectedAccountResponse: (response: StorageAccountResponse) => void;
+  /**
+   * Set the in context file account object
+   *
+   * This context will be used for upload, delete requests etc
+   */
+  setSelectedFile: (fileAccount: ShadowFileData) => void;
   /**
    * Upload files to currently selected storage account
    * @param files FileList object
@@ -98,30 +112,34 @@ export function useShadowDrive({
   onFileDeleted,
   onFilesUploaded,
   onStorageAccountCreated,
+  onFileReplaced,
 }: UseShadowDriveOptions): UseShadowDriveReturnValue {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [loading, setLoading] = useState(false);
-  const selectedFileRef = useRef<ShdwFileAccount>();
+  const [selectedFile, setSelectedFile] = useState<ShadowFileData>();
   const [drive, setDrive] = useState<ShdwDrive>();
   const [selectedAccountResponse, setSelectedAccountResponse] =
     useState<StorageAccountResponse>();
   const [storageAccounts, setStorageAccounts] =
     useState<StorageAccountResponse[]>();
-  const [filesByKey, setFilesByKey] = useState<FilesRecord>({});
+  const [filesByKey, setFilesByStorageKey] = useState<FilesRecord>({});
 
   const selectedAccountKey = selectedAccountResponse?.publicKey.toString();
   const copyToClipboard = (): void => {
-    if (!selectedAccountKey || !selectedFileRef.current) return;
+    if (!selectedAccountKey || !selectedFile) return;
+
     navigator.clipboard.writeText(
-      getShadowDriveFileUrl(selectedAccountKey, selectedFileRef.current?.name)
+      getShadowDriveFileUrl(selectedAccountKey, selectedFile.account.name)
     );
 
     onCopiedToClipboard?.();
   };
 
   const refreshAccounts = useCallback(async () => {
-    if (!drive) return;
+    if (!drive) {
+      throw "Drive not initialised";
+    }
 
     try {
       setLoading(true);
@@ -142,11 +160,11 @@ export function useShadowDrive({
         })
       );
 
-      setFilesByKey(
+      setFilesByStorageKey(
         fileNames.reduce((acc, next) => {
           acc[next.publicKeyString] = next.fileAccounts;
           return acc;
-        }, {} as Record<string, ShdwFileAccount[]>)
+        }, {} as Record<string, ShadowFileData[]>)
       );
     } catch (e) {
       console.error(e);
@@ -175,6 +193,42 @@ export function useShadowDrive({
     [drive]
   );
 
+  const replaceFile = useCallback(
+    async (file: File) => {
+      if (!drive || !selectedFile || !selectedAccountResponse) return;
+
+      try {
+        const accountKeyString = selectedAccountResponse.publicKey.toString();
+        await drive.editFile(
+          selectedAccountResponse.publicKey,
+          getShadowDriveFileUrl(accountKeyString, selectedFile.account.name),
+          file
+        );
+
+        // Replace file in account/file map
+        const updatedFile = await getFileAccount(selectedFile.key, connection);
+        setFilesByStorageKey({
+          ...filesByKey,
+          [accountKeyString]: filesByKey[accountKeyString].map((fileData) => {
+            if (fileData.key.equals(selectedFile.key)) {
+              return {
+                key: selectedFile.key,
+                account: updatedFile,
+              };
+            }
+
+            return fileData;
+          }),
+        });
+
+        onFileReplaced?.();
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [drive, selectedAccountResponse, selectedFile]
+  );
+
   const uploadFiles = useCallback(
     async (files: FileList) => {
       if (!drive || !selectedAccountResponse) return;
@@ -189,20 +243,19 @@ export function useShadowDrive({
   );
 
   const deleteSelectedFile = useCallback(async () => {
-    if (!drive || !selectedAccountResponse || !selectedFileRef.current) return;
+    if (!drive || !selectedAccountResponse || !selectedFile) return;
 
     await drive.deleteFile(
       selectedAccountResponse.publicKey,
       getShadowDriveFileUrl(
         selectedAccountResponse.publicKey.toString(),
-        selectedFileRef.current.name
+        selectedFile.account.name
       )
     );
 
     onFileDeleted?.();
-
-    selectedFileRef.current = undefined;
-  }, [drive, selectedAccountResponse]);
+    setSelectedFile(undefined);
+  }, [drive, selectedAccountResponse, selectedFile]);
 
   useEffect(() => {
     if (drive) {
@@ -216,7 +269,7 @@ export function useShadowDrive({
     try {
       // clear data for new connection.
       setSelectedAccountResponse(undefined);
-      setFilesByKey({});
+      setFilesByStorageKey({});
 
       setLoading(true);
       const drive = await new ShdwDrive(connection, wallet).init();
@@ -235,7 +288,7 @@ export function useShadowDrive({
   return {
     filesByKey,
     loading,
-    selectedFileRef,
+    selectedFile,
     selectedAccountResponse,
     selectedAccountKey,
     selectedAccountFiles: selectedAccountKey && filesByKey[selectedAccountKey],
@@ -244,7 +297,9 @@ export function useShadowDrive({
     createAccount,
     deleteSelectedFile,
     refreshAccounts,
+    replaceFile,
     setSelectedAccountResponse,
+    setSelectedFile,
     uploadFiles,
   };
 }

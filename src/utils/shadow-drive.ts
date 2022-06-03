@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { StorageAccountResponse } from "@shadow-drive/sdk";
-import { Connection } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { IDL } from "./idl";
 
 export type ShdwFileAccount = {
@@ -10,9 +10,15 @@ export type ShdwFileAccount = {
   immutable: boolean;
 };
 
+export type ShadowFileData = {
+  key: PublicKey;
+  account: ShdwFileAccount;
+};
+
 const GB_BYTES = 1_073_741_824;
 const MB_BYTES = 1_048_576;
 const KB_BYTES = 1_024;
+const accountsCoder = new anchor.BorshAccountsCoder(IDL);
 
 export const formatBytes = (bytes: number) => {
   if (bytes < MB_BYTES) {
@@ -71,16 +77,27 @@ export const getFileAccounts = async (
     accounts.map((a) => a[0])
   );
 
-  const accountsCoder = new anchor.BorshAccountsCoder(IDL);
   return files
-    .map((file) => {
+    .map((file, i) => {
       if (file) {
-        return accountsCoder.decode<ShdwFileAccount>("File", file.data);
+        return {
+          account: accountsCoder.decode<ShdwFileAccount>("File", file.data),
+          key: fileAccounts[i],
+        };
       }
 
-      return undefined;
+      return {};
     })
-    .filter((account) => account) as ShdwFileAccount[];
+    .filter((account) => account.account) as ShadowFileData[];
+};
+
+export const getFileAccount = async (
+  fileKey: PublicKey,
+  connection: Connection
+) => {
+  const fileAccountInfo = await connection.getAccountInfo(fileKey);
+
+  return accountsCoder.decode<ShdwFileAccount>("File", fileAccountInfo.data);
 };
 
 export const getShadowDriveFileUrl = (accountKey: string, fileName: string) => {
