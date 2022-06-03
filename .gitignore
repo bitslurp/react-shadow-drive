@@ -5,3 +5,4 @@ dist
 .DS_Store
 **/.yalc
 **/yalc.lock
+**/yarn-error.log
