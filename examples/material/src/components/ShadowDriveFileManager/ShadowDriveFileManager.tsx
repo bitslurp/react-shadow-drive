@@ -49,6 +49,19 @@ export const ShadowDriveFileManager: FunctionComponent<
   const menuOpen = Boolean(anchorEl);
   const [snackbarMessage, setSnackbarMessage] = useState<string>();
   const [replaceFileDialogOpen, setReplaceFileDialogOpen] = useState(false);
+  const handleSnackbardClose = () => setSnackbarMessage(undefined);
+  const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleCloseStorageForm = () => setStorageFormOpen(false);
+  const handleCloseFileUpload = () => setFileUploadOpen(false);
+  const handleCloseDeletionDialog = useCallback(() => {
+    setDeletionDialogOpen(false);
+  }, [setDeletionDialogOpen]);
   const {
     selectedAccountResponse,
     selectedAccountKey,
@@ -67,23 +80,19 @@ export const ShadowDriveFileManager: FunctionComponent<
     onCopiedToClipboard: () => setSnackbarMessage("Copied to clipboard!"),
     onFileDeleted: () => setSnackbarMessage("File marked for deletion"),
     onStorageAccountCreated: () => setSnackbarMessage("New account created"),
+    onFilesUploaded() {
+      setSnackbarMessage("Files uploaded successfully");
+      handleCloseFileUpload();
+    },
+    onFileReplaced() {
+      setSnackbarMessage(`${selectedFile?.account.name} replaced`);
+      setReplaceFileDialogOpen(false);
+    },
   });
-
-  const handleSnackbardClose = () => setSnackbarMessage(undefined);
-  const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+  const closeMenu = (handleMenuSelection: () => void) => () => {
+    handleClose();
+    handleMenuSelection();
   };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleCloseStorageForm = () => setStorageFormOpen(false);
-
-  const handleCloseFileUpload = () => setFileUploadOpen(false);
-
-  const handleCloseDeletionDialog = useCallback(() => {
-    setDeletionDialogOpen(false);
-  }, [setDeletionDialogOpen]);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
@@ -237,16 +246,18 @@ export const ShadowDriveFileManager: FunctionComponent<
           "aria-labelledby": "file-menu-button",
         }}
       >
-        <MenuItem onClick={copyToClipboard}>Copy to clipboard</MenuItem>
+        <MenuItem onClick={closeMenu(copyToClipboard)}>
+          Copy to clipboard
+        </MenuItem>
         <MenuItem
           disabled={selectedFile?.account.immutable}
-          onClick={() => setReplaceFileDialogOpen(true)}
+          onClick={closeMenu(() => setReplaceFileDialogOpen(true))}
         >
           Replace
         </MenuItem>
         <MenuItem
           disabled={selectedFile?.account.immutable}
-          onClick={() => setDeletionDialogOpen(true)}
+          onClick={closeMenu(() => setDeletionDialogOpen(true))}
         >
           Delete
         </MenuItem>
@@ -265,7 +276,7 @@ export const ShadowDriveFileManager: FunctionComponent<
       <FileUploadForm
         id="file-upload-dialog"
         title="Upload Files"
-        onSubmit={(files) => uploadFiles(files)}
+        onSubmit={uploadFiles}
         open={!!selectedAccountKey && fileUploadOpen}
         onClose={handleCloseFileUpload}
       >
@@ -276,9 +287,7 @@ export const ShadowDriveFileManager: FunctionComponent<
         id="replace-file-dialog"
         title="Replace File"
         maxFiles={1}
-        onSubmit={async (files) => {
-          await replaceFile(files[0]);
-        }}
+        onSubmit={(files) => replaceFile(files[0])}
         open={!!selectedFile && replaceFileDialogOpen}
         onClose={() => setReplaceFileDialogOpen(false)}
       >
