@@ -1,6 +1,5 @@
 import { ChevronRight } from "@mui/icons-material";
 import FolderIcon from "@mui/icons-material/Folder";
-import ImageIcon from "@mui/icons-material/Image";
 import MenuIcon from "@mui/icons-material/MoreVert";
 import {
   Alert,
@@ -34,7 +33,11 @@ import React, {
   useCallback,
   useState,
 } from "react";
-import { formatBytes, useShadowDrive } from "react-shadow-drive";
+import {
+  formatBytes,
+  getShadowDriveFileUrl,
+  useShadowDrive,
+} from "react-shadow-drive";
 import { FileUploadForm } from "../FileUploadForm/FileUploadForm";
 import { StorageAccountForm } from "../StorageAccountForm/StorageAccountForm";
 
@@ -93,6 +96,8 @@ export const ShadowDriveFileManager: FunctionComponent<
     handleClose();
     handleMenuSelection();
   };
+
+  console.log(storageAccounts);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
@@ -182,7 +187,18 @@ export const ShadowDriveFileManager: FunctionComponent<
                   <ListItemAvatar>
                     <Avatar>
                       {/(png|jpg|gif)$/i.test(file.name) ? (
-                        <ImageIcon />
+                        <img
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            objectPosition: "center center",
+                          }}
+                          src={getShadowDriveFileUrl(
+                            selectedAccountKey as string,
+                            file.name
+                          )}
+                        />
                       ) : (
                         <FolderIcon />
                       )}
