@@ -1,13 +1,13 @@
 {
-  "name": "react-shdw-drive",
-  "version": "0.1.1",
+  "name": "react-shadow-drive",
+  "version": "0.1.0",
   "description": "Simple React Hook/Utils for GenesysGo ShadowDrive",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/WillSnowdon/react-shdw-drive"
+    "url": "https://github.com/WillSnowdon/react-shadow-drive"
   },
   "publishConfig": {
     "access": "public"
