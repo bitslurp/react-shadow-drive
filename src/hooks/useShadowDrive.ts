@@ -1,5 +1,6 @@
 import { ShdwDrive, StorageAccountResponse } from "@shadow-drive/sdk";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
 import {
   getFileAccount,
@@ -136,17 +137,8 @@ export function useShadowDrive({
     onCopiedToClipboard?.();
   };
 
-  const refreshAccounts = useCallback(async () => {
-    if (!drive) {
-      throw "Drive not initialised";
-    }
-
-    try {
-      setLoading(true);
-      const accounts = await drive.getStorageAccounts();
-
-      setStorageAccounts(accounts);
-
+  const getFiles = useCallback(
+    async (accounts: StorageAccountResponse[]) => {
       const fileAccounts = await Promise.all(
         accounts.map(async (account) => {
           const publicKeyString = account.publicKey.toString();
@@ -166,6 +158,53 @@ export function useShadowDrive({
           return acc;
         }, {} as Record<string, ShadowFileData[]>)
       );
+    },
+    [connection]
+  );
+
+  const refreshAccount = useCallback(
+    async (accountKey: PublicKey) => {
+      if (!drive) {
+        throw "Drive not initialised";
+      }
+
+      try {
+        setLoading(true);
+        const refreshedAccount = await drive.getStorageAccount(accountKey);
+
+        setStorageAccounts(
+          storageAccounts.map((storageAccount) => {
+            if (storageAccount.publicKey.equals(accountKey)) {
+              return {
+                account: refreshedAccount,
+                publicKey: accountKey,
+              };
+            }
+
+            return storageAccount;
+          })
+        );
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [drive]
+  );
+
+  const refreshAccounts = useCallback(async () => {
+    if (!drive) {
+      throw "Drive not initialised";
+    }
+
+    try {
+      setLoading(true);
+      const accounts = await drive.getStorageAccounts();
+
+      setStorageAccounts(accounts);
+
+      getFiles(accounts);
     } catch (e) {
       console.error(e);
     } finally {
@@ -223,6 +262,8 @@ export function useShadowDrive({
           }),
         });
 
+        refreshAccount(selectedAccountResponse.publicKey);
+
         onFileReplaced?.();
       } catch (e) {
         console.error(e);
@@ -239,7 +280,7 @@ export function useShadowDrive({
 
       onFilesUploaded?.(Array.from(files).map((f) => f.name));
 
-      refreshAccounts();
+      refreshAccount(selectedAccountResponse.publicKey);
     },
     [drive, selectedAccountResponse]
   );
