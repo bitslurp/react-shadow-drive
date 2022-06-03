@@ -147,7 +147,7 @@ export function useShadowDrive({
 
       setStorageAccounts(accounts);
 
-      const fileNames = await Promise.all(
+      const fileAccounts = await Promise.all(
         accounts.map(async (account) => {
           const publicKeyString = account.publicKey.toString();
 
@@ -161,7 +161,7 @@ export function useShadowDrive({
       );
 
       setFilesByStorageKey(
-        fileNames.reduce((acc, next) => {
+        fileAccounts.reduce((acc, next) => {
           acc[next.publicKeyString] = next.fileAccounts;
           return acc;
         }, {} as Record<string, ShadowFileData[]>)
@@ -199,10 +199,12 @@ export function useShadowDrive({
 
       try {
         const accountKeyString = selectedAccountResponse.publicKey.toString();
+        const fileName = selectedFile.account.name;
+
         await drive.editFile(
           selectedAccountResponse.publicKey,
-          getShadowDriveFileUrl(accountKeyString, selectedFile.account.name),
-          file
+          getShadowDriveFileUrl(accountKeyString, fileName),
+          new File([file], fileName)
         );
 
         // Replace file in account/file map

@@ -22,7 +22,7 @@ const accountsCoder = new anchor.BorshAccountsCoder(IDL);
 
 export const formatBytes = (bytes: number) => {
   if (bytes < MB_BYTES) {
-    return `${(bytes / KB_BYTES).toFixed(2)}GB`;
+    return `${(bytes / KB_BYTES).toFixed(2)}KB`;
   } else if (bytes < GB_BYTES) {
     return `${(bytes / MB_BYTES).toFixed(2)}MB`;
   } else {
@@ -82,7 +82,7 @@ export const getFileAccounts = async (
       if (file) {
         return {
           account: accountsCoder.decode<ShdwFileAccount>("File", file.data),
-          key: fileAccounts[i],
+          key: accounts[i][0],
         };
       }
 
