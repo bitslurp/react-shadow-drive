@@ -4,10 +4,9 @@
 
 - From the root directory of this project:
 
-
 ```bash
 yarn install
-cd examples/web
+cd examples/material
 yarn install
 ```
 
