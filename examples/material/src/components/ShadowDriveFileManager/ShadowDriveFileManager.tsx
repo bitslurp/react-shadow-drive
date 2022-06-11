@@ -172,10 +172,12 @@ export const ShadowDriveFileManager: FunctionComponent<
                           })`}
                       </Typography>
                     }
-                    secondary={`Created: ${format(
-                      new Date(account.creationTime * 1000),
-                      "do MMM yyyy"
-                    )}`}
+                    secondary={t("file-manager-account-created", {
+                      date: format(
+                        new Date(account.creationTime * 1000),
+                        "do MMM yyyy"
+                      ),
+                    })}
                   />
                   <ListItemIcon>
                     <ChevronRight />
@@ -186,15 +188,17 @@ export const ShadowDriveFileManager: FunctionComponent<
         </List>
         {!loading && storageAccounts?.length === 0 && (
           <Alert severity="info">
-            <AlertTitle>No storage folders found</AlertTitle>
-            Please add some storage to enable file uploads.
+            <AlertTitle>
+              {t("file-manager-no-accounts-notification-title")}
+            </AlertTitle>
+            {t("file-manager-no-accounts-notification-description")}
           </Alert>
         )}
         <Button
           disabled={!wallet?.publicKey}
           onClick={() => setStorageFormOpen(true)}
         >
-          Add Storage
+          {t("file-manager-add-storage-btn")}
         </Button>
       </Box>
 
@@ -206,19 +210,19 @@ export const ShadowDriveFileManager: FunctionComponent<
               <Button
                 disabled={cancellingDeleteAccount}
                 onClick={() => {
-                  console.log("click");
                   cancelDeleteStorageAccount(selectedAccountResponse);
                 }}
                 size="small"
               >
-                Undo
+                {t("file-manager-undo-delete-storage-btn")}
                 {cancellingDeleteAccount && <CircularProgress size="16px" />}
               </Button>
             }
           >
-            <AlertTitle>Marked For Deletion</AlertTitle>
-            This storage account and it's files will be deleted on the next
-            Solana epoch.
+            <AlertTitle>
+              {t("file-manager-account-deletion-notification-title")}
+            </AlertTitle>
+            {t("file-manager-account-deletion-notification-description")}
           </Alert>
         )}
         <List
@@ -229,12 +233,14 @@ export const ShadowDriveFileManager: FunctionComponent<
         >
           {selectedAccountResponse && (
             <ListSubheader sx={{ bgcolor: "transparent" }}>
-              {`${formatBytes(
-                +selectedAccountResponse.account.storageAvailable.toString()
-              )} of ${formatBytes(
-                +selectedAccountResponse.account.storage.toString()
-              )} remaining`}
-
+              {t("file-manager-account-capacity", {
+                availableSpace: formatBytes(
+                  +selectedAccountResponse.account.storageAvailable.toString()
+                ),
+                totalSpace: formatBytes(
+                  +selectedAccountResponse.account.storage.toString()
+                ),
+              })}
               {selectedAccountResponse.account.immutable ? (
                 <LockIcon />
               ) : (
@@ -306,7 +312,7 @@ export const ShadowDriveFileManager: FunctionComponent<
               }
               onClick={() => setFileUploadOpen(true)}
             >
-              Upload Files
+              {t("file-manager-upload-btn")}
             </Button>
             <Button
               disabled={
@@ -315,24 +321,33 @@ export const ShadowDriveFileManager: FunctionComponent<
               }
               onClick={() => setAccountDeletionDialogOpen(true)}
             >
-              Delete Account
+              {t("file-manager-delete-account-btn")}
             </Button>
           </Box>
         )}
       </Box>
 
-      <Dialog open={storageFormOpen} onClose={handleCloseStorageForm}>
-        <DialogTitle>Add Storage</DialogTitle>
+      <Dialog
+        aria-labelledby="add-storage-dialog-title"
+        aria-describedby="add-storage-dialog-description"
+        open={storageFormOpen}
+        onClose={handleCloseStorageForm}
+      >
+        <DialogTitle id="add-storage-dialog-title">
+          {t("add-storage-dialog-title")}
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Enter configuration for your new storage folder.
+          <DialogContentText id="add-storage-dialog-description">
+            {t("add-storage-dialog-description")}
           </DialogContentText>
           <StorageAccountForm onSubmit={createAccount} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseStorageForm}>Cancel</Button>
+          <Button onClick={handleCloseStorageForm}>
+            {t("add-storage-dialog-cancel-btn")}
+          </Button>
           <Button form="storage-account-form" type="submit">
-            Create
+            {t("add-storage-dialog-confirm-btn")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -341,17 +356,23 @@ export const ShadowDriveFileManager: FunctionComponent<
         <Dialog
           open={fileDeletionDialogOpen}
           onClose={handleCloseFileDeletionDialog}
-          aria-labelledby="delete-dialog-title"
-          aria-describedby="delete-dialog-description"
+          aria-labelledby="delete-file-dialog-title"
+          aria-describedby="delete-file-dialog-description"
         >
-          <DialogTitle id="delete-dialog-title">Delete File</DialogTitle>
+          <DialogTitle id="delete-file-dialog-title">
+            {t("delete-file-dialog-title")}
+          </DialogTitle>
           <DialogContent>
-            <DialogContentText id="delete-dialog-description">
-              Are you sure you want to delete {selectedFile.account.name}?
+            <DialogContentText id="delete-file-dialog-description">
+              {t("delete-file-dialog-description", {
+                fileName: selectedFile.account.name,
+              })}
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseFileDeletionDialog}>Cancel</Button>
+            <Button onClick={handleCloseFileDeletionDialog}>
+              {t("delete-file-dialog-cancel-btn")}
+            </Button>
             <Button
               onClick={() => {
                 deleteFile(selectedFile);
@@ -359,7 +380,7 @@ export const ShadowDriveFileManager: FunctionComponent<
               }}
               autoFocus
             >
-              Confirm
+              {t("delete-file-dialog-confirm-btn")}
             </Button>
           </DialogActions>
         </Dialog>
@@ -373,7 +394,7 @@ export const ShadowDriveFileManager: FunctionComponent<
           aria-describedby="delete-account-dialog-description"
         >
           <DialogTitle id="delete-account-dialog-title">
-            Delete Account
+            {t("delete-account-dialog-title")}
           </DialogTitle>
           <DialogContent>
             {deletingAccount && (
@@ -382,13 +403,17 @@ export const ShadowDriveFileManager: FunctionComponent<
               </Box>
             )}
             <DialogContentText id="delete-acount-dialog-description">
-              {deletingAccount
-                ? "Marking Storage For Deletion..."
-                : "Are you sure you want to delete this account and it's files?"}
+              {t(
+                `delete-account-dialog-description${
+                  deletingAccount ? "-deleting" : ""
+                }`
+              )}
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseAccountDeletionDialog}>Cancel</Button>
+            <Button onClick={handleCloseAccountDeletionDialog}>
+              {t("delete-account-dialog-cancel-btn")}
+            </Button>
             <Button
               disabled={deletingAccount}
               onClick={async () => {
@@ -400,7 +425,7 @@ export const ShadowDriveFileManager: FunctionComponent<
               }}
               autoFocus
             >
-              Confirm
+              {t("delete-account-dialog-confirm-btn")}
             </Button>
           </DialogActions>
         </Dialog>
@@ -417,7 +442,7 @@ export const ShadowDriveFileManager: FunctionComponent<
           }}
         >
           <MenuItem onClick={closeMenu(copyToClipboard)}>
-            Copy to clipboard
+            {t("file-menu-clipboard")}
           </MenuItem>
           <MenuItem
             disabled={
@@ -425,21 +450,21 @@ export const ShadowDriveFileManager: FunctionComponent<
             }
             onClick={closeMenu(() => setReplaceFileDialogOpen(true))}
           >
-            Replace
+            {t("file-menu-replace")}
           </MenuItem>
           {selectedFile.account.toBeDeleted ? (
             <MenuItem
               disabled={selectedFile?.account.immutable}
               onClick={closeMenu(cancelFileDeletion)}
             >
-              Cancel Deletion
+              {t("file-menu-cancel-delete")}
             </MenuItem>
           ) : (
             <MenuItem
               disabled={selectedFile?.account.immutable}
               onClick={closeMenu(() => setFileDeletionDialogOpen(true))}
             >
-              Delete
+              {t("file-menu-delete")}
             </MenuItem>
           )}
         </Menu>
@@ -457,25 +482,27 @@ export const ShadowDriveFileManager: FunctionComponent<
       {selectedAccountResponse && (
         <FileUploadForm
           id="file-upload-dialog"
-          title="Upload Files"
+          title={t("file-upload-form-upload-title")}
           onSubmit={(files) => uploadFiles(selectedAccountResponse, files)}
           open={!!selectedAccountKey && fileUploadOpen}
           onClose={handleCloseFileUpload}
         >
-          Uplod your files. Currently limited to 5 max.
+          {t("file-upload-form-upload-text")}
         </FileUploadForm>
       )}
 
       {selectedFile && (
         <FileUploadForm
           id="replace-file-dialog"
-          title="Replace File"
+          title={t("file-upload-form-replace-title")}
           maxFiles={1}
           onSubmit={(files) => replaceFile(selectedFile, files[0])}
           open={!!selectedFile && replaceFileDialogOpen}
           onClose={() => setReplaceFileDialogOpen(false)}
         >
-          Replace {selectedFile?.account.name}
+          {t("file-upload-form-replace-text", {
+            fileName: selectedFile.account.name,
+          })}
         </FileUploadForm>
       )}
     </div>
