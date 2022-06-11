@@ -1,0 +1,50 @@
+{
+  "file-manager-file-deleting-success": "{{identifier}} marked for deletion",
+  "file-manager-file-deleting-error": "Error: Failed to mark {{identifier}} for deletion",
+  "file-manager-file-cancellingDeletion-success": "{{identifier}} deletion has been cancelled",
+  "file-manager-file-cancellingDeletion-error": "Error: Failed to cancel deletion of {{identifier}}",
+  "file-manager-file-replacing-success": "{{identifier}} has been replaced!",
+  "file-manager-file-replacing-error": "Error: Failed to replace data for {{identifier}}",
+  "file-manager-file-uploading-success": "{{identifier}} successfully uploaded!",
+  "file-manager-file-uploading-error": "Error: Failed to upload {{identifier}}",
+
+  "file-manager-delete-account-btn": "Delete Storage",
+  "file-manager-upload-btn": "Upload Files",
+
+  "file-manager-account-capacity": "{{availableSpace}} of {{totalSpace}} remaining",
+  "file-manager-account-created": "Created: {{date}}",
+
+  "file-manager-no-accounts-notification-title": "No storage folders found",
+  "file-manager-no-accounts-notification-message": "Please add some storage to enable file uploads.",
+
+  "file-manager-account-deletion-notification-title": "No storage folders found",
+  "file-manager-account-deletion-notification-message": "Please add some storage to enable file uploads.",
+  "file-manager-undo-delete-storage-btn": "No storage folders found",
+  "file-manager-add-storage-btn": "Add Storage",
+
+  "file-menu-clipboard": "Copy to clipboard",
+  "file-menu-replace": "Replace",
+  "file-menu-delete": "Delete",
+  "file-menu-cancel-delete": "Cancel Deletion",
+
+  "file-upload-form-replace-title": "Replace File",
+  "file-upload-form-replace-text": "Replace {{fileName}}",
+  "file-upload-form-upload-title": "Upload Files",
+  "file-upload-form-upload-text": "Uplod your files. Currently limited to 5 max.",
+
+  "delete-account-dialog-title": "Delete Account",
+  "delete-account-dialog-description-deleting": "Marking Storage For Deletion...",
+  "delete-account-dialog-description": "Are you sure you want to delete this account and it's files?",
+  "delete-account-dialog-confirm-btn": "Confirm",
+  "delete-account-dialog-cancel-btn": "Cancel",
+
+  "delete-file-dialog-title": "Delete File",
+  "delete-file-dialog-description": "Are you sure you want to delete {{fileName}}?",
+  "delete-file-dialog-confirm-btn": "Confirm",
+  "delete-file-dialog-cancel-btn": "Cancel",
+
+  "add-storage-dialog-title": "Add Storage",
+  "add-storage-dialog-description": "Enter configuration for your new storage folder.",
+  "add-storage-dialog-confirm-btn": "Create",
+  "add-storage-dialog-cancel-btn": "Cancel"
+}

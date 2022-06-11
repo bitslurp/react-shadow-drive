@@ -8,6 +8,7 @@ export type ShdwFileAccount = {
   name: string;
   size: number;
   immutable: boolean;
+  storageAccount: PublicKey;
 };
 
 export type ShadowFileData = {

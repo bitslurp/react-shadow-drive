@@ -8,6 +8,7 @@ import {
   DialogContentText,
   DialogTitle,
   Snackbar,
+  Typography,
 } from "@mui/material";
 import { Box } from "@mui/system";
 import React, {
@@ -73,9 +74,9 @@ export const FileUploadForm: FunctionComponent<
       _fileRejections: FileRejection[],
       event: DropEvent
     ) => {
-      if (!ref.current) return;
+      if (!ref.current?.files?.length) return;
 
-      setFiles((ref.current as any).files);
+      setFiles(ref.current.files);
     },
     []
   );
@@ -98,6 +99,7 @@ export const FileUploadForm: FunctionComponent<
       ...(isFocused ? focusedStyle : {}),
       ...(isDragAccept ? acceptStyle : {}),
       ...(isDragReject ? rejectStyle : {}),
+      backgroundColor: "transparent",
     }),
     [isFocused, isDragAccept, isDragReject]
   );
@@ -115,6 +117,9 @@ export const FileUploadForm: FunctionComponent<
     }
   };
 
+  const fileArray = files ? Array.from(files) : [];
+  const invalidFileNames = fileArray.some((f) => f.name.length > 20);
+
   return (
     <>
       <Dialog
@@ -129,33 +134,63 @@ export const FileUploadForm: FunctionComponent<
           <DialogContentText id={`${id}-description`}>
             {children}
           </DialogContentText>
+
           {submitting ? (
             <div style={{ textAlign: "center" }}>
               <Box marginBottom={2}>Uploading...</Box>
               <CircularProgress />
             </div>
           ) : (
-            <div style={{ textAlign: "center" }}>
-              <div {...getRootProps({ style })}>
-                <input
-                  {...inputProps}
-                  ref={(el) => {
-                    (inputProps as any).ref.current = el;
-                    ref.current = el;
-                  }}
-                />
-                {isDragActive ? (
-                  <p>Drop the files here ...</p>
-                ) : (
-                  <p>Drag 'n' drop some files here, or click to select files</p>
-                )}
-              </div>
-            </div>
+            !files?.length && (
+              <Box marginY={4} style={{ textAlign: "center" }}>
+                <div {...getRootProps({ style })}>
+                  <input
+                    {...inputProps}
+                    ref={(el) => {
+                      (inputProps as any).ref.current = el;
+                      ref.current = el;
+                    }}
+                  />
+                  {isDragActive ? (
+                    <p>Drop the files here ...</p>
+                  ) : (
+                    <p>
+                      Drag 'n' drop some files here, or click to select files
+                    </p>
+                  )}
+                </div>
+              </Box>
+            )
+          )}
+
+          {files?.length && (
+            <Box mt={3}>
+              <Typography variant="h6">Selected Files:</Typography>
+              {Array.from(files)
+                .map((file) => file.name)
+                .join(", ")}
+
+              {invalidFileNames && (
+                <Box marginY={2}>
+                  <Alert severity="error">
+                    Max. length for file names is 20 chars
+                  </Alert>
+                </Box>
+              )}
+              <Box mt={2}>
+                <Button variant="contained" onClick={() => setFiles(undefined)}>
+                  Reset
+                </Button>
+              </Box>
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={!filesDropped || submitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!filesDropped || invalidFileNames || submitting}
+          >
             Upload
           </Button>
         </DialogActions>
