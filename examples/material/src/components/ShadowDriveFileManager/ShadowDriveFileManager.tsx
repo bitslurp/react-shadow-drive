@@ -121,10 +121,6 @@ export const ShadowDriveFileManager: FunctionComponent<
       setSnackbarMessage(
         t(`file-manager-account-${action}-error`, { identifier })
       ),
-    onFilesUploaded() {
-      setSnackbarMessage("Files uploaded successfully");
-      handleCloseFileUpload();
-    },
   });
   const selectedAccountKey = selectedAccountResponse?.publicKey.toString();
   const selectedAccountFiles = selectedAccountResponse
