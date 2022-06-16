@@ -110,6 +110,7 @@ export const FileUploadForm: FunctionComponent<
     try {
       setSubmitting(true);
       await onSubmit(files);
+      setFiles(undefined);
     } catch {
       setSnackbarOpen(true);
     } finally {

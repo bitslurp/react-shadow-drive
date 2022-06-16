@@ -17,6 +17,7 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  LinearProgress,
   List,
   ListItem,
   ListItemAvatar,
@@ -27,6 +28,8 @@ import {
   Menu,
   MenuItem,
   Snackbar,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
 import "@project-serum/anchor";
@@ -64,11 +67,16 @@ export const ShadowDriveFileManager: FunctionComponent<
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
   const [snackbarMessage, setSnackbarMessage] = useState<string>();
+  const [snackbarErrorMessage, setSnackbarErrorMessage] = useState<string>();
   const [replaceFileDialogOpen, setReplaceFileDialogOpen] = useState(false);
-  const handleSnackbardClose = () => setSnackbarMessage(undefined);
   const [selectedAccountKey, setSelectedAccountKey] = useState<PublicKey>();
   const [selectedFile, setSelectedFile] = useState<ShadowFileData>();
+  const [selectedFileTab, setSelectedFileTab] = useState<
+    "files" | "deleted-files"
+  >("files");
 
+  const handleSnackbarClose = () => setSnackbarMessage(undefined);
+  const handleSnackbarErrorClose = () => setSnackbarErrorMessage(undefined);
   const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -130,12 +138,24 @@ export const ShadowDriveFileManager: FunctionComponent<
     ? storageAccounts?.find((account) =>
         account.publicKey.equals(selectedAccountKey)
       )
-    : undefined;
+    : storageAccounts?.[0];
   const selectedAccountKeyString =
     selectedAccountResponse?.publicKey.toString();
-  const selectedAccountFiles = selectedAccountResponse
-    ? getAccountFiles(selectedAccountResponse)
-    : [];
+
+  const [selectedAccountFiles, selectedAccountDeletedFiles] =
+    selectedAccountResponse
+      ? getAccountFiles(selectedAccountResponse).reduce<
+          [ShadowFileData[], ShadowFileData[]]
+        >(
+          (acc, file) => {
+            if (file.account.toBeDeleted) {
+              return [acc[0], acc[1].concat(file)];
+            }
+            return [acc[0].concat(file), acc[1]];
+          },
+          [[], []]
+        )
+      : [[], []];
   const closeMenu =
     (handleMenuSelection: (file: ShadowFileData) => void) => () => {
       handleClose();
@@ -174,8 +194,22 @@ export const ShadowDriveFileManager: FunctionComponent<
   );
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "0.5fr 2fr" }}>
       <Box>
+        {!loading && storageAccounts?.length === 0 && (
+          <Alert severity="info">
+            <AlertTitle>
+              {t("file-manager-no-accounts-notification-title")}
+            </AlertTitle>
+            {t("file-manager-no-accounts-notification-message")}
+          </Alert>
+        )}
+        <Button
+          disabled={!wallet?.publicKey}
+          onClick={() => setStorageFormOpen(true)}
+        >
+          {t("file-manager-add-storage-btn")}
+        </Button>
         <List sx={{ minWidth: 360, bgcolor: "background.paper" }}>
           {Object.values(pendingStorageAccounts).map(({ accountName }) => (
             <ListItem style={{ opacity: 0.6 }} key={accountName}>
@@ -240,159 +274,261 @@ export const ShadowDriveFileManager: FunctionComponent<
               );
             })}
         </List>
-        {!loading && storageAccounts?.length === 0 && (
-          <Alert severity="info">
-            <AlertTitle>
-              {t("file-manager-no-accounts-notification-title")}
-            </AlertTitle>
-            {t("file-manager-no-accounts-notification-message")}
-          </Alert>
-        )}
-        <Button
-          disabled={!wallet?.publicKey}
-          onClick={() => setStorageFormOpen(true)}
-        >
-          {t("file-manager-add-storage-btn")}
-        </Button>
       </Box>
-
-      <Box padding={2} sx={{ bgcolor: "#333" }}>
+      <Box sx={{ bgcolor: "#333" }}>
         {pollingSelectedAccount && (
-          <Alert severity="info">
-            <AlertTitle>
-              {t("file-manager-account-polling-notification-title")}
-            </AlertTitle>
-            {t("file-manager-account-polling-notification-message")}
-          </Alert>
+          <LinearProgress aria-aria-describedby="pollingAlert" />
         )}
-        {selectedAccountResponse?.account.toBeDeleted && (
-          <Alert
-            severity="warning"
-            action={
-              <Button
-                disabled={isStorageActionPending(
-                  selectedAccountResponse,
-                  "cancellingDeletion"
-                )}
-                onClick={() => {
-                  cancelDeleteStorageAccount(selectedAccountResponse);
-                }}
-                size="small"
-              >
-                {t("file-manager-undo-delete-storage-btn")}
-                {isStorageActionPending(
-                  selectedAccountResponse,
-                  "cancellingDeletion"
-                ) && <CircularProgress size="16px" />}
-              </Button>
-            }
-          >
-            <AlertTitle>
-              {t("file-manager-account-deletion-notification-title")}
-            </AlertTitle>
-            {t("file-manager-account-deletion-notification-message")}
-          </Alert>
-        )}
-        <List
-          sx={{ width: "100%", bgcolor: "transparent" }}
-          style={{
-            opacity: selectedAccountResponse?.account.toBeDeleted ? 0.5 : 1,
-          }}
-        >
-          {selectedAccountResponse && (
-            <ListSubheader sx={{ bgcolor: "transparent" }}>
-              {t("file-manager-account-capacity", {
-                availableSpace: formatBytes(
-                  +selectedAccountResponse.account.storageAvailable.toString()
-                ),
-                totalSpace: formatBytes(
-                  +selectedAccountResponse.account.storage.toString()
-                ),
-              })}
-              {selectedAccountResponse.account.immutable ? (
-                <LockIcon />
-              ) : (
-                <LockOpenIcon />
-              )}
-            </ListSubheader>
+        <Box padding={2}>
+          {pollingSelectedAccount && (
+            <Box marginBottom={2}>
+              <Alert severity="info" id="pollingAlert">
+                <AlertTitle>
+                  {t("file-manager-account-polling-notification-title")}
+                </AlertTitle>
+                {t("file-manager-account-polling-notification-message")}
+              </Alert>
+            </Box>
           )}
-          {selectedAccountResponse &&
-            selectedAccountFiles &&
-            selectedAccountFiles.map((fileData) => {
-              const fileAccount = fileData.account;
-              const storageAccount = selectedAccountResponse.account;
-              const updating = isFileActionPending(fileAccount);
-              return (
-                <ListItem
-                  key={fileAccount.name}
-                  secondaryAction={
-                    <IconButton
-                      disabled={storageAccount.toBeDeleted || updating}
-                      id="file-menu-button"
-                      aria-controls={menuOpen ? "file-menu" : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={menuOpen ? "true" : undefined}
-                      onClick={(e) => {
-                        setSelectedFile(fileData);
-                        handleOpenMenu(e);
-                      }}
-                    >
-                      {updating ? <CircularProgress size={16} /> : <MenuIcon />}
-                    </IconButton>
-                  }
+          {selectedAccountResponse?.account.toBeDeleted && (
+            <Alert
+              severity="warning"
+              action={
+                <Button
+                  disabled={isStorageActionPending(selectedAccountResponse)}
+                  onClick={() => {
+                    cancelDeleteStorageAccount(selectedAccountResponse);
+                  }}
+                  size="small"
                 >
-                  <ListItemAvatar>
-                    <Avatar>
-                      {/(png|jpg|gif|jpeg)$/i.test(fileAccount.name) ? (
-                        <img
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            objectPosition: "center center",
-                          }}
-                          src={getShadowDriveFileUrl(
-                            selectedAccountKeyString as string,
-                            fileAccount.name
-                          )}
-                        />
-                      ) : (
-                        <FileIcon />
-                      )}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={`${fileAccount.name} (${formatBytes(
-                      fileAccount.size
-                    )})`}
-                  />
-                </ListItem>
-              );
-            })}
-        </List>
+                  {t("file-manager-undo-delete-storage-btn")}
+                  {isStorageActionPending(
+                    selectedAccountResponse,
+                    "cancellingDeletion"
+                  ) && <CircularProgress size="16px" />}
+                </Button>
+              }
+            >
+              <AlertTitle>
+                {t("file-manager-account-deletion-notification-title")}
+              </AlertTitle>
+              {t("file-manager-account-deletion-notification-message")}
+            </Alert>
+          )}
+          <Tabs
+            value={selectedFileTab}
+            onChange={(e, value) => setSelectedFileTab(value)}
+          >
+            <Tab label={t("file-manager-account-files-tab")} value="files" />
 
-        {selectedAccountResponse && (
-          <Box>
-            <Button
-              disabled={
-                selectedAccountResponse.account.immutable ||
-                selectedAccountResponse.account.toBeDeleted
-              }
-              onClick={() => setFileUploadOpen(true)}
+            <Tab
+              label={t("file-manager-account-deleted-files-tab")}
+              value="deleted-files"
+            />
+          </Tabs>
+          <TabPanel selected={selectedFileTab} value="files">
+            <List
+              sx={{ width: "100%", bgcolor: "transparent" }}
+              style={{
+                opacity: selectedAccountResponse?.account.toBeDeleted ? 0.5 : 1,
+              }}
             >
-              {t("file-manager-upload-btn")}
-            </Button>
-            <Button
-              disabled={
-                selectedAccountResponse.account.immutable ||
-                selectedAccountResponse.account.toBeDeleted
-              }
-              onClick={() => setAccountDeletionDialogOpen(true)}
+              {selectedAccountResponse && (
+                <ListSubheader
+                  disableSticky
+                  style={{ display: "flex", alignItems: "center" }}
+                  sx={{ bgcolor: "transparent" }}
+                >
+                  <Box marginRight={1}>
+                    {t("file-manager-account-capacity", {
+                      availableSpace: formatBytes(
+                        +selectedAccountResponse.account.storageAvailable.toString()
+                      ),
+                      totalSpace: formatBytes(
+                        +selectedAccountResponse.account.storage.toString()
+                      ),
+                    })}
+                  </Box>
+                  {selectedAccountResponse.account.immutable ? (
+                    <LockIcon />
+                  ) : (
+                    <LockOpenIcon />
+                  )}
+                </ListSubheader>
+              )}
+              {selectedAccountResponse &&
+                selectedAccountFiles &&
+                selectedAccountFiles.map((fileData) => {
+                  const fileAccount = fileData.account;
+                  const storageAccount = selectedAccountResponse.account;
+                  const updating = isFileActionPending(fileAccount);
+                  return (
+                    <ListItem
+                      key={fileAccount.name}
+                      secondaryAction={
+                        <IconButton
+                          disabled={storageAccount.toBeDeleted || updating}
+                          id="file-menu-button"
+                          aria-controls={menuOpen ? "file-menu" : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={menuOpen ? "true" : undefined}
+                          onClick={(e) => {
+                            setSelectedFile(fileData);
+                            handleOpenMenu(e);
+                          }}
+                        >
+                          {updating ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <MenuIcon />
+                          )}
+                        </IconButton>
+                      }
+                    >
+                      <ListItemAvatar>
+                        <Avatar>
+                          {/(png|jpg|gif|jpeg)$/i.test(fileAccount.name) ? (
+                            <img
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                objectPosition: "center center",
+                              }}
+                              src={getShadowDriveFileUrl(
+                                selectedAccountKeyString as string,
+                                fileAccount.name
+                              )}
+                            />
+                          ) : (
+                            <FileIcon />
+                          )}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={`${fileAccount.name} (${formatBytes(
+                          fileAccount.size
+                        )})`}
+                      />
+                    </ListItem>
+                  );
+                })}
+            </List>
+          </TabPanel>
+
+          <TabPanel selected={selectedFileTab} value="deleted-files">
+            <List
+              sx={{ width: "100%", bgcolor: "transparent" }}
+              style={{
+                opacity: selectedAccountResponse?.account.toBeDeleted ? 0.5 : 1,
+              }}
             >
-              {t("file-manager-delete-account-btn")}
-            </Button>
-          </Box>
-        )}
+              {selectedAccountResponse && (
+                <ListSubheader
+                  disableSticky
+                  style={{ display: "flex", alignItems: "center" }}
+                  sx={{ bgcolor: "transparent" }}
+                >
+                  <Box marginRight={1}>
+                    {t("file-manager-account-capacity", {
+                      availableSpace: formatBytes(
+                        +selectedAccountResponse.account.storageAvailable.toString()
+                      ),
+                      totalSpace: formatBytes(
+                        +selectedAccountResponse.account.storage.toString()
+                      ),
+                    })}
+                  </Box>
+                  {selectedAccountResponse.account.immutable ? (
+                    <LockIcon />
+                  ) : (
+                    <LockOpenIcon />
+                  )}
+                </ListSubheader>
+              )}
+              {selectedAccountResponse &&
+                selectedAccountDeletedFiles &&
+                selectedAccountDeletedFiles.map((fileData) => {
+                  const fileAccount = fileData.account;
+                  const storageAccount = selectedAccountResponse.account;
+                  const updating = isFileActionPending(fileAccount);
+                  return (
+                    <ListItem
+                      key={fileAccount.name}
+                      secondaryAction={
+                        <IconButton
+                          disabled={storageAccount.toBeDeleted || updating}
+                          id="file-menu-button"
+                          aria-controls={menuOpen ? "file-menu" : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={menuOpen ? "true" : undefined}
+                          onClick={(e) => {
+                            setSelectedFile(fileData);
+                            handleOpenMenu(e);
+                          }}
+                        >
+                          {updating ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <MenuIcon />
+                          )}
+                        </IconButton>
+                      }
+                    >
+                      <ListItemAvatar>
+                        <Avatar>
+                          {/(png|jpg|gif|jpeg)$/i.test(fileAccount.name) ? (
+                            <img
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                objectPosition: "center center",
+                              }}
+                              src={getShadowDriveFileUrl(
+                                selectedAccountKeyString as string,
+                                fileAccount.name
+                              )}
+                            />
+                          ) : (
+                            <FileIcon />
+                          )}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={`${fileAccount.name} (${formatBytes(
+                          fileAccount.size
+                        )})`}
+                      />
+                    </ListItem>
+                  );
+                })}
+            </List>
+          </TabPanel>
+
+          {selectedAccountResponse && (
+            <Box>
+              <Button
+                disabled={
+                  selectedAccountResponse.account.immutable ||
+                  selectedAccountResponse.account.toBeDeleted
+                }
+                onClick={() => setFileUploadOpen(true)}
+              >
+                {t("file-manager-upload-btn")}
+              </Button>
+              <Button
+                disabled={
+                  selectedAccountResponse.account.immutable ||
+                  selectedAccountResponse.account.toBeDeleted
+                }
+                onClick={() => setAccountDeletionDialogOpen(true)}
+              >
+                {t("file-manager-delete-account-btn")}
+              </Button>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       <Dialog
@@ -541,17 +677,30 @@ export const ShadowDriveFileManager: FunctionComponent<
       <Snackbar
         open={!!snackbarMessage}
         autoHideDuration={6000}
-        onClose={handleSnackbardClose}
+        onClose={handleSnackbarClose}
       >
-        <Alert onClose={handleSnackbardClose} severity="success">
+        <Alert onClose={handleSnackbarClose} severity="success">
           {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!snackbarErrorMessage}
+        autoHideDuration={6000}
+        onClose={handleSnackbarErrorClose}
+      >
+        <Alert onClose={handleSnackbarErrorClose} severity="error">
+          {snackbarErrorMessage}
         </Alert>
       </Snackbar>
       {selectedAccountResponse && (
         <FileUploadForm
           id="file-upload-dialog"
           title={t("file-upload-form-upload-title")}
-          onSubmit={(files) => uploadFiles(selectedAccountResponse, files)}
+          onSubmit={async (files) => {
+            await uploadFiles(selectedAccountResponse, files);
+            handleCloseFileUpload();
+          }}
           open={!!selectedAccountKey && fileUploadOpen}
           onClose={handleCloseFileUpload}
         >
@@ -576,3 +725,25 @@ export const ShadowDriveFileManager: FunctionComponent<
     </div>
   );
 };
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  selected: string;
+  value: string;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, selected, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== selected}
+      id={`simple-tabpanel-${value}`}
+      aria-labelledby={`simple-tab-${value}`}
+      {...other}
+    >
+      {value === selected && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}

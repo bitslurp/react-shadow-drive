@@ -107,22 +107,40 @@ export const getShadowDriveFileUrl = (accountKey: string, fileName: string) => {
 
 // TODO: Add retry number to account for successive request failure
 export async function pollRequest<T>(
-  request: () => Promise<T>,
-  shouldStop: (response: T) => boolean,
-  onStop?: (response: T) => void,
-  timeout = 400
+  params: {
+    request: () => Promise<T>;
+    shouldStop: (response: T) => boolean;
+    onStop?: (response: T) => void;
+    onFailure?: () => void;
+    maxFailures?: number;
+    timeout?: number;
+  },
+  failureCount: number = 0
 ) {
-  try {
-    const response = await request();
+  const {
+    request,
+    shouldStop,
+    onStop,
+    onFailure,
+    maxFailures = 5,
+    timeout = 1000,
+  } = params;
 
-    const stop = shouldStop(response);
+  if (maxFailures && maxFailures === failureCount) {
+    onFailure?.();
+  } else {
+    try {
+      const response = await request();
 
-    if (stop) {
-      onStop?.(response);
-    } else {
-      setTimeout(() => pollRequest(request, shouldStop, onStop), timeout);
+      const stop = shouldStop(response);
+
+      if (stop) {
+        onStop?.(response);
+      } else {
+        setTimeout(() => pollRequest(params), timeout);
+      }
+    } catch {
+      setTimeout(() => pollRequest(params, failureCount + 1), timeout);
     }
-  } catch {
-    setTimeout(() => pollRequest(request, shouldStop, onStop), timeout);
   }
 }

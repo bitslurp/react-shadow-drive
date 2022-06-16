@@ -1,4 +1,5 @@
 import {
+  ShadowBatchUploadResponse,
   ShdwDrive,
   StorageAccount,
   StorageAccountResponse,
@@ -183,12 +184,13 @@ export type UseShadowDriveReturnValue = {
   uploadFiles: (
     account: StorageAccountResponse,
     files: FileList
-  ) => Promise<void>;
+  ) => Promise<ShadowBatchUploadResponse[]>;
 };
 
 export enum RequestError {
   DriveNotInitialised = "DriveNotInitialised",
   StorageImmutable = "StorageImmutable",
+  UserRejection = "UserRejection",
 }
 
 const fileIdentity = (file: ShdwFileAccount) =>
@@ -396,6 +398,26 @@ export function useShadowDrive({
     [drive, storageAccounts]
   );
 
+  const updateFileByKey = (
+    fileKey: PublicKey,
+    updatedFile: ShdwFileAccount
+  ) => {
+    const accountKeyString = updatedFile.storageAccount.toString();
+    setFilesByStorageKey({
+      ...filesByKey,
+      [accountKeyString]: filesByKey[accountKeyString].map((fileData) => {
+        if (fileData.key.equals(fileKey)) {
+          return {
+            key: fileData.key,
+            account: updatedFile,
+          };
+        }
+
+        return fileData;
+      }),
+    });
+  };
+
   const replaceFile = useCallback(
     async (fileData: ShadowFileData, replacementFile: File) => {
       assertDrive();
@@ -413,20 +435,9 @@ export function useShadowDrive({
 
         // Replace file in account/file map
         const updatedFile = await getFileAccount(fileData.key, connection);
-        setFilesByStorageKey({
-          ...filesByKey,
-          [accountKeyString]: filesByKey[accountKeyString].map((fileData) => {
-            if (fileData.key.equals(fileData.key)) {
-              return {
-                key: fileData.key,
-                account: updatedFile,
-              };
-            }
+        updateFileByKey(fileData.key, updatedFile);
 
-            return fileData;
-          }),
-        });
-
+        // Available storage will change so update account to *hopefully* get latest value
         refreshAccount(
           storageAccounts.find((acc) =>
             acc.publicKey.equals(fileData.account.storageAccount)
@@ -446,28 +457,74 @@ export function useShadowDrive({
     [drive, refreshAccount]
   );
 
-  const uploadFiles = useCallback(
-    async (accountResponse: StorageAccountResponse, files: FileList) => {
-      assertDrive();
+  const uploadFiles = async (
+    accountResponse: StorageAccountResponse,
+    files: FileList
+  ) => {
+    assertDrive();
 
-      const names = Array.from(files)
-        .map((f) => f.name)
-        .join();
-      try {
-        await drive.uploadMultipleFiles(accountResponse.publicKey, files);
+    const namesArr = Array.from(files).map((f) => f.name);
+    const names = namesArr.join();
 
-        onFileRequestSuccess?.("uploading", names);
+    try {
+      const response = await drive.uploadMultipleFiles(
+        accountResponse.publicKey,
+        files
+      );
 
-        refreshAccount(accountResponse);
-      } catch (e) {
-        console.error(e);
-
-        onFileRequestError?.("uploading", names);
-        throw e;
+      if (response.some((r) => !r.transaction_signature)) {
+        throw new Error(RequestError.UserRejection);
       }
-    },
-    [drive, refreshAccount]
-  );
+
+      onFileRequestSuccess?.("uploading", names);
+
+      refreshAccount(accountResponse);
+      refreshAccountFiles(accountResponse);
+
+      pollRequest({
+        request: async () => {
+          const latestStorageAccount = await drive.getStorageAccount(
+            accountResponse.publicKey
+          );
+          return getFileAccounts(
+            {
+              account: latestStorageAccount,
+              publicKey: accountResponse.publicKey,
+            },
+            connection
+          );
+        },
+        shouldStop: (files) => {
+          const r = namesArr.every((name) =>
+            files.some((r) => r.account.name === name)
+          );
+          console.log(
+            r,
+            namesArr,
+            files.map((f) => f.account.name)
+          );
+          return r;
+        },
+        onFailure: () => {},
+        onStop: (replacement) => {
+          const key = accountResponse.publicKey.toString();
+          setFilesByStorageKey({
+            ...filesByKey,
+            [key]: replacement,
+          });
+          // updateFileAction(fileData.account);
+        },
+        timeout: pollingInterval,
+      });
+
+      return response;
+    } catch (e) {
+      console.error(e);
+
+      onFileRequestError?.("uploading", names);
+      throw e;
+    }
+  };
 
   const deleteFile = useCallback(
     async (fileData: ShadowFileData) => {
@@ -485,47 +542,60 @@ export function useShadowDrive({
           )
         );
 
+        updateFileAction(fileData.account, "polling");
+        pollRequest({
+          request: () => getFileAccount(fileData.key, connection),
+          shouldStop: (account) => account.toBeDeleted,
+          onFailure: () => updateFileAction(fileData.account),
+          onStop: (replacement) => {
+            updateFileByKey(fileData.key, replacement);
+            updateFileAction(fileData.account);
+          },
+          timeout: pollingInterval,
+        });
+
         onFileRequestSuccess?.("deleting", name, fileData);
       } catch (e) {
         console.error(e);
         onFileRequestError?.("deleting", name, fileData);
-
-        throw e;
-      } finally {
         updateFileAction(fileData.account);
+        throw e;
       }
     },
-    [drive]
+    [drive, connection, updateFileByKey]
   );
 
-  const cancelFileDeletion = useCallback(
-    async (fileData: ShadowFileData) => {
-      assertDrive();
+  const cancelFileDeletion = async (fileData: ShadowFileData) => {
+    assertDrive();
 
-      const { name, storageAccount } = fileData.account;
-      try {
-        updateFileAction(fileData.account, "cancellingDeletion");
+    const { name, storageAccount } = fileData.account;
+    try {
+      updateFileAction(fileData.account, "cancellingDeletion");
 
-        await drive.cancelDeleteFile(
-          storageAccount,
-          getShadowDriveFileUrl(
-            storageAccount.toString(),
-            fileData.account.name
-          )
-        );
+      await drive.cancelDeleteFile(
+        storageAccount,
+        getShadowDriveFileUrl(storageAccount.toString(), fileData.account.name)
+      );
 
-        onFileRequestSuccess?.("cancellingDeletion", name, fileData);
-      } catch (e) {
-        console.error(e);
-        onFileRequestError?.("cancellingDeletion", name, fileData);
-
-        throw e;
-      } finally {
-        updateFileAction(fileData.account);
-      }
-    },
-    [drive]
-  );
+      onFileRequestSuccess?.("cancellingDeletion", name, fileData);
+      updateFileAction(fileData.account, "polling");
+      pollRequest({
+        request: () => getFileAccount(fileData.key, connection),
+        shouldStop: (account) => !account.toBeDeleted,
+        onFailure: () => updateFileAction(fileData.account),
+        onStop: (replacement) => {
+          updateFileByKey(fileData.key, replacement);
+          updateFileAction(fileData.account);
+        },
+        timeout: pollingInterval,
+      });
+    } catch (e) {
+      console.error(e);
+      onFileRequestError?.("cancellingDeletion", name, fileData);
+      updateFileAction(fileData.account);
+      throw e;
+    }
+  };
 
   const deleteStorageAccount = async (
     accountResponse: StorageAccountResponse
@@ -540,17 +610,18 @@ export function useShadowDrive({
       onStorageRequestSuccess?.("deleting", identifier, accountResponse);
 
       updateStorageAction(accountResponse, "polling");
-      pollRequest(
-        () => drive.getStorageAccount(accountResponse.publicKey),
-        (account) => account.toBeDeleted,
-        (account) => {
+      pollRequest({
+        request: () => drive.getStorageAccount(accountResponse.publicKey),
+        shouldStop: (account) => account.toBeDeleted,
+        onFailure: () => updateStorageAction(accountResponse),
+        onStop: (account) => {
           setStorageAccounts(
             replaceStorageAccount(account, accountResponse.publicKey)
           );
           updateStorageAction(accountResponse);
         },
-        pollingInterval
-      );
+        timeout: pollingInterval,
+      });
     } catch (e) {
       console.error(e);
 
@@ -575,7 +646,19 @@ export function useShadowDrive({
           identifier,
           accountResponse
         );
-        refreshAccount(accountResponse);
+
+        updateStorageAction(accountResponse, "polling");
+        pollRequest({
+          request: () => drive.getStorageAccount(accountResponse.publicKey),
+          shouldStop: (account) => !account.toBeDeleted,
+          onFailure: () => updateStorageAction(accountResponse),
+          onStop: (replacement) => {
+            updateStorageAction(accountResponse);
+            setStorageAccounts(
+              replaceStorageAccount(replacement, accountResponse.publicKey)
+            );
+          },
+        });
       } catch (e) {
         console.error(e);
 
@@ -584,9 +667,8 @@ export function useShadowDrive({
           identifier,
           accountResponse
         );
-        throw e;
-      } finally {
         updateStorageAction(accountResponse);
+        throw e;
       }
     },
     [drive, refreshAccount]
