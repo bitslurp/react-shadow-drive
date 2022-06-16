@@ -110,6 +110,7 @@ export const FileUploadForm: FunctionComponent<
     try {
       setSubmitting(true);
       await onSubmit(files);
+      setFiles(undefined);
     } catch {
       setSnackbarOpen(true);
     } finally {
@@ -163,7 +164,7 @@ export const FileUploadForm: FunctionComponent<
             )
           )}
 
-          {files?.length && (
+          {files?.length && !submitting && (
             <Box mt={3}>
               <Typography variant="h6">Selected Files:</Typography>
               {Array.from(files)
