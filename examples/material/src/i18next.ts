@@ -7,7 +7,7 @@ i18n
   .use(Fetch)
   .init({
     backend: {
-      loadPath: "/i18n/{{lng}}.json",
+      loadPath: "/{{lng}}.json",
     },
     lng: "en",
 

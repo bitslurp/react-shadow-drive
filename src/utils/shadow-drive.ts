@@ -104,3 +104,25 @@ export const getFileAccount = async (
 export const getShadowDriveFileUrl = (accountKey: string, fileName: string) => {
   return `https://shdw-drive.genesysgo.net/${accountKey}/${fileName}`;
 };
+
+// TODO: Add retry number to account for successive request failure
+export async function pollRequest<T>(
+  request: () => Promise<T>,
+  shouldStop: (response: T) => boolean,
+  onStop?: (response: T) => void,
+  timeout = 400
+) {
+  try {
+    const response = await request();
+
+    const stop = shouldStop(response);
+
+    if (stop) {
+      onStop?.(response);
+    } else {
+      setTimeout(() => pollRequest(request, shouldStop, onStop), timeout);
+    }
+  } catch {
+    setTimeout(() => pollRequest(request, shouldStop, onStop), timeout);
+  }
+}

@@ -71,7 +71,8 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.29.3",
     "eslint-plugin-react-hooks": "^4.3.0",
-    "parcel": "^2.3.1",
+    "parcel": "^2.6.0",
+    "parcel-namer-rewrite": "^2.0.0-rc.2",
     "parcel-reporter-static-files-copy": "^1.3.4",
     "prettier": "^2.5.1",
     "shx": "^0.3.4",
@@ -80,5 +81,11 @@
   },
   "staticFiles": {
     "staticPath": "./src/static"
+  },
+  "parcel-namer-rewrite": {
+    "developmentHashing": true,
+    "rules": {
+      "(.*).js$": "{hash}.js"
+    }
   }
 }

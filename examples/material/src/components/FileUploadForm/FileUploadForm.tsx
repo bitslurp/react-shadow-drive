@@ -163,7 +163,7 @@ export const FileUploadForm: FunctionComponent<
             )
           )}
 
-          {files?.length && (
+          {files?.length && !submitting && (
             <Box mt={3}>
               <Typography variant="h6">Selected Files:</Typography>
               {Array.from(files)
