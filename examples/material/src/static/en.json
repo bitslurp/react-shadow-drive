@@ -15,9 +15,11 @@
   "file-manager-account-makingImmutable-error": "Error: Failed to make storage immutable",
   "file-manager-account-cancellingDeletion-success": "Deletion of storage cancelled",
   "file-manager-account-cancellingDeletion-error": "Error: Failed to cancel storage deletion",
-  "file-manager-account-adding-storage": "Creating storage: {{accountName}}",
+  "file-manager-account-adding-storage": "Adding Storage: {{accountName}}",
   "file-manager-account-files-tab": "Files",
   "file-manager-account-deleted-files-tab": "Trash",
+  "file-manager-account-files-empty": "No files uploaded",
+  "file-manager-account-deleted-files-empty": "Empty",
 
   "file-manager-delete-account-btn": "Delete Storage",
   "file-manager-upload-btn": "Upload Files",

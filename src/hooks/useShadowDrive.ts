@@ -426,11 +426,10 @@ export function useShadowDrive({
       try {
         updateFileAction(fileData.account, "replacing");
         const accountKeyString = fileData.account.storageAccount.toString();
-
         await drive.editFile(
           fileData.account.storageAccount,
           getShadowDriveFileUrl(accountKeyString, fileName),
-          new File([replacementFile], fileName)
+          new File([replacementFile], fileName, { type: replacementFile.type })
         );
 
         // Replace file in account/file map
@@ -471,6 +470,8 @@ export function useShadowDrive({
         accountResponse.publicKey,
         files
       );
+
+      console.log(response);
 
       if (response.some((r) => !r.transaction_signature)) {
         throw new Error(RequestError.UserRejection);
