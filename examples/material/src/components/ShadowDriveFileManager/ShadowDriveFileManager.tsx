@@ -32,6 +32,7 @@ import {
   Snackbar,
   Tab,
   Tabs,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import "@project-serum/anchor";
@@ -100,15 +101,15 @@ export const ShadowDriveFileManager: FunctionComponent<
     pendingStorageAccounts,
     loading,
     storageAccounts,
-    refreshAccountFiles,
+    refreshStorageAccountFiles,
     replaceFile,
-    refreshAccount,
+    refreshStorageAccount,
     cancelFileDeletion,
     cancelDeleteStorageAccount,
     uploadFiles,
     copyToClipboard,
-    createAccount,
-    getAccountFiles,
+    createStorageAccount,
+    getStorageAccountFiles,
     deleteFile,
     deleteStorageAccount,
   } = useShadowDrive({
@@ -146,7 +147,7 @@ export const ShadowDriveFileManager: FunctionComponent<
 
   const [selectedAccountFiles, selectedAccountDeletedFiles] =
     selectedAccountResponse
-      ? getAccountFiles(selectedAccountResponse).reduce<
+      ? getStorageAccountFiles(selectedAccountResponse).reduce<
           [ShadowFileData[], ShadowFileData[]]
         >(
           (acc, file) => {
@@ -189,10 +190,10 @@ export const ShadowDriveFileManager: FunctionComponent<
 
   const handleCreateAccount = useCallback(
     (data: StorageAccountInfo) => {
-      createAccount(data);
+      createStorageAccount(data);
       handleCloseStorageForm();
     },
-    [createAccount, handleCloseStorageForm]
+    [createStorageAccount, handleCloseStorageForm]
   );
 
   return (
@@ -238,7 +239,7 @@ export const ShadowDriveFileManager: FunctionComponent<
             sortedStorageAccounts.map((accountResponse) => {
               const { account, publicKey } = accountResponse;
               const accountPublicKeyString = publicKey.toString();
-              const files = getAccountFiles(accountResponse);
+              const files = getStorageAccountFiles(accountResponse);
 
               return (
                 <ListItemButton
@@ -246,8 +247,8 @@ export const ShadowDriveFileManager: FunctionComponent<
                   selected={accountPublicKeyString === selectedAccountKeyString}
                   key={accountPublicKeyString}
                   onClick={() => {
-                    refreshAccountFiles(accountResponse);
-                    refreshAccount(accountResponse);
+                    refreshStorageAccountFiles(accountResponse);
+                    refreshStorageAccount(accountResponse);
                     setSelectedAccountKey(accountResponse.publicKey);
                     setSelectedFileTab("files");
                   }}
@@ -295,9 +296,15 @@ export const ShadowDriveFileManager: FunctionComponent<
                     {selectedAccountResponse.account.identifier}
                   </span>
                   {selectedAccountResponse.account.immutable ? (
-                    <LockIcon fontSize="small" />
+                    <Tooltip
+                      title={t("file-manager-account-immutable-tooltip")}
+                    >
+                      <LockIcon aria-labe fontSize="small" />
+                    </Tooltip>
                   ) : (
-                    <LockOpenIcon fontSize="small" />
+                    <Tooltip title={t("file-manager-account-mutable-tooltip")}>
+                      <LockOpenIcon fontSize="small" />
+                    </Tooltip>
                   )}
                 </Typography>
                 <Typography variant="subtitle2">
@@ -725,7 +732,7 @@ export const ShadowDriveFileManager: FunctionComponent<
             await uploadFiles(selectedAccountResponse, files);
             handleCloseFileUpload();
           }}
-          open={!!selectedAccountKey && fileUploadOpen}
+          open={fileUploadOpen}
           onClose={handleCloseFileUpload}
         >
           {t("file-upload-form-upload-text")}
