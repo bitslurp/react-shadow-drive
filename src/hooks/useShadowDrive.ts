@@ -126,7 +126,9 @@ export type UseShadowDriveReturnValue = {
     account: StorageAccountResponse,
     action?: StorageAccountAction
   ): boolean;
-  getAccountFiles(storageAcount: StorageAccountResponse): ShadowFileData[];
+  getStorageAccountFiles(
+    storageAcount: StorageAccountResponse
+  ): ShadowFileData[];
   /**
    * Err, cancel deletion of a file which is `toBeDeleted`
    */
@@ -144,7 +146,7 @@ export type UseShadowDriveReturnValue = {
   /**
    * Add a new storage accout
    */
-  createAccount: (data: StorageAccountInfo) => Promise<void>;
+  createStorageAccount: (data: StorageAccountInfo) => Promise<void>;
   /**
    * Mark a file for deletion
    */
@@ -160,16 +162,18 @@ export type UseShadowDriveReturnValue = {
     account: StorageAccountResponse
   ) => Promise<void>;
   /**
-   * Refresh account beloinging to active wallet/connection
+   * Refresh account belonging to active wallet/connection
    */
-  refreshAccounts: () => Promise<void>;
+  refreshStorageAccounts: () => Promise<void>;
   /**
    * Refresh data for an individual account
    */
-  refreshAccount: (
+  refreshStorageAccount: (
     accountResponse: StorageAccountResponse
   ) => Promise<StorageAccount>;
-  refreshAccountFiles: (account: StorageAccountResponse) => Promise<void>;
+  refreshStorageAccountFiles: (
+    account: StorageAccountResponse
+  ) => Promise<void>;
   /**
    * Replace a file, assuming it's mutable, for a storage account
    */
@@ -264,7 +268,7 @@ export function useShadowDrive({
     });
   };
 
-  const refreshAccountFiles = useCallback(
+  const refreshStorageAccountFiles = useCallback(
     async (account: StorageAccountResponse) => {
       const fileAccounts = await getFileAccounts(account, connection);
 
@@ -313,7 +317,9 @@ export function useShadowDrive({
     }
   };
 
-  const refreshAccount = async (accountResponse: StorageAccountResponse) => {
+  const refreshStorageAccount = async (
+    accountResponse: StorageAccountResponse
+  ) => {
     assertDrive();
     const { publicKey } = accountResponse;
 
@@ -335,7 +341,7 @@ export function useShadowDrive({
     }
   };
 
-  const refreshAccounts = useCallback(async () => {
+  const refreshStorageAccounts = useCallback(async () => {
     assertDrive();
 
     try {
@@ -354,7 +360,7 @@ export function useShadowDrive({
     }
   }, [drive]);
 
-  const createAccount = useCallback(
+  const createStorageAccount = useCallback(
     async (data: StorageAccountInfo) => {
       assertDrive();
 
@@ -374,8 +380,6 @@ export function useShadowDrive({
 
         try {
           const account = await drive.getStorageAccount(publicKey);
-          console.log("new account", account);
-
           setStorageAccounts(storageAccounts.concat({ account, publicKey }));
         } catch (e) {
           //
@@ -426,11 +430,10 @@ export function useShadowDrive({
       try {
         updateFileAction(fileData.account, "replacing");
         const accountKeyString = fileData.account.storageAccount.toString();
-
         await drive.editFile(
           fileData.account.storageAccount,
           getShadowDriveFileUrl(accountKeyString, fileName),
-          new File([replacementFile], fileName)
+          new File([replacementFile], fileName, { type: replacementFile.type })
         );
 
         // Replace file in account/file map
@@ -438,7 +441,7 @@ export function useShadowDrive({
         updateFileByKey(fileData.key, updatedFile);
 
         // Available storage will change so update account to *hopefully* get latest value
-        refreshAccount(
+        refreshStorageAccount(
           storageAccounts.find((acc) =>
             acc.publicKey.equals(fileData.account.storageAccount)
           )
@@ -454,7 +457,7 @@ export function useShadowDrive({
         updateFileAction(fileData.account);
       }
     },
-    [drive, refreshAccount]
+    [drive, refreshStorageAccount]
   );
 
   const uploadFiles = async (
@@ -478,8 +481,8 @@ export function useShadowDrive({
 
       onFileRequestSuccess?.("uploading", names);
 
-      refreshAccount(accountResponse);
-      refreshAccountFiles(accountResponse);
+      refreshStorageAccount(accountResponse);
+      refreshStorageAccountFiles(accountResponse);
 
       pollRequest({
         request: async () => {
@@ -497,11 +500,6 @@ export function useShadowDrive({
         shouldStop: (files) => {
           const r = namesArr.every((name) =>
             files.some((r) => r.account.name === name)
-          );
-          console.log(
-            r,
-            namesArr,
-            files.map((f) => f.account.name)
           );
           return r;
         },
@@ -671,7 +669,7 @@ export function useShadowDrive({
         throw e;
       }
     },
-    [drive, refreshAccount]
+    [drive, refreshStorageAccount]
   );
 
   const makeStorageAccountImmutable = async (
@@ -686,7 +684,7 @@ export function useShadowDrive({
       updateStorageAction(accountResponse, "makingImmutable");
       await drive.makeStorageImmutable(accountResponse.publicKey);
 
-      refreshAccount(accountResponse);
+      refreshStorageAccount(accountResponse);
 
       onStorageRequestSuccess?.(
         "makingImmutable",
@@ -742,7 +740,7 @@ export function useShadowDrive({
 
   useEffect(() => {
     if (drive) {
-      refreshAccounts();
+      refreshStorageAccounts();
     }
   }, [drive]);
 
@@ -760,22 +758,22 @@ export function useShadowDrive({
     loading,
     storageAccounts,
     pendingStorageAccounts,
-    refreshAccountFiles,
+    refreshStorageAccountFiles,
     isStorageCreating(fileName: string) {
       return !!accountsCreation[fileName];
     },
-    getAccountFiles(storageAcount: StorageAccountResponse) {
+    getStorageAccountFiles(storageAcount: StorageAccountResponse) {
       return filesByKey[storageAcount.publicKey.toString()] || [];
     },
     copyToClipboard,
-    createAccount,
+    createStorageAccount,
     cancelDeleteStorageAccount,
     cancelFileDeletion,
     deleteFile,
     deleteStorageAccount,
     makeStorageAccountImmutable,
-    refreshAccounts,
-    refreshAccount,
+    refreshStorageAccounts,
+    refreshStorageAccount,
     replaceFile,
     uploadFiles,
   };

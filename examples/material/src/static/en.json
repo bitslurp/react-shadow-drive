@@ -15,9 +15,13 @@
   "file-manager-account-makingImmutable-error": "Error: Failed to make storage immutable",
   "file-manager-account-cancellingDeletion-success": "Deletion of storage cancelled",
   "file-manager-account-cancellingDeletion-error": "Error: Failed to cancel storage deletion",
-  "file-manager-account-adding-storage": "Creating storage: {{accountName}}",
+  "file-manager-account-adding-storage": "Adding Storage: {{accountName}}",
   "file-manager-account-files-tab": "Files",
   "file-manager-account-deleted-files-tab": "Trash",
+  "file-manager-account-files-empty": "No files uploaded",
+  "file-manager-account-deleted-files-empty": "Empty",
+  "file-manager-account-immutable-tooltip": "Storage frozen permanently",
+  "file-manager-account-mutable-tooltip": "Storage still mutable",
 
   "file-manager-delete-account-btn": "Delete Storage",
   "file-manager-upload-btn": "Upload Files",
@@ -45,9 +49,9 @@
   "file-upload-form-upload-title": "Upload Files",
   "file-upload-form-upload-text": "Uplod your files. Currently limited to 5 max.",
 
-  "delete-account-dialog-title": "Delete Account",
+  "delete-account-dialog-title": "Delete Storage",
   "delete-account-dialog-description-deleting": "Marking Storage For Deletion...",
-  "delete-account-dialog-description": "Are you sure you want to delete this account and it's files?",
+  "delete-account-dialog-description": "Are you sure you want to delete this storage bucket and it's files?",
   "delete-account-dialog-confirm-btn": "Confirm",
   "delete-account-dialog-cancel-btn": "Cancel",
 
