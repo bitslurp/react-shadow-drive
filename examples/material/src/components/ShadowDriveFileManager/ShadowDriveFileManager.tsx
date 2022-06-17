@@ -285,7 +285,7 @@ export const ShadowDriveFileManager: FunctionComponent<
       </Box>
       <Box sx={{ bgcolor: "#333" }}>
         {pollingSelectedAccount && (
-          <LinearProgress aria-aria-describedby="pollingAlert" />
+          <LinearProgress aria-describedby="pollingAlert" />
         )}
         <Box padding={2} paddingBottom={10}>
           {selectedAccountResponse && (

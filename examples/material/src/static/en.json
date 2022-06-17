@@ -53,15 +53,15 @@
   "delete-account-dialog-description-deleting": "Marking Storage For Deletion...",
   "delete-account-dialog-description": "Are you sure you want to delete this storage bucket and it's files?",
   "delete-account-dialog-confirm-btn": "Confirm",
-  "delete-account-dialog-cancel-btn": "Cancel",
+  "delete-account-dialog-cancel-btn": "Close",
 
   "delete-file-dialog-title": "Delete File",
   "delete-file-dialog-description": "Are you sure you want to delete {{fileName}}?",
   "delete-file-dialog-confirm-btn": "Confirm",
-  "delete-file-dialog-cancel-btn": "Cancel",
+  "delete-file-dialog-cancel-btn": "Close",
 
   "add-storage-dialog-title": "Add Storage",
   "add-storage-dialog-description": "Enter configuration for your new storage folder.",
   "add-storage-dialog-confirm-btn": "Create",
-  "add-storage-dialog-cancel-btn": "Cancel"
+  "add-storage-dialog-cancel-btn": "Close"
 }

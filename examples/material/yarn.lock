@@ -1290,14 +1290,13 @@
     bs58 "^4.0.1"
     eventemitter3 "^4.0.7"
 
-"@shadow-drive/sdk@^2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-2.0.3.tgz#aa27eac745b82416ac64166de421a5075964ea43"
-  integrity sha512-3Pa+7hdLQdeCGeCfAYXWoFc/su2J7khJl8FAgrb45yzofpFji7Y9dRu5cwPyok/NeF/ysHtRag09VNcqfoGGhA==
+"@shadow-drive/sdk@^2.0.4":
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-2.0.4.tgz#57a5e080a9a3f3077517c861f4af9dbadcdc33ee"
+  integrity sha512-ftRHAVsCS+aO5+kQrsoEQ7U9ry3r9CtBv5wjXl38Gl3XUIHtZ7KDSm95ozBnhk/CBLQ52jmz0aY5WRq38QDfSA==
   dependencies:
     "@project-serum/anchor" "^0.24.2"
     "@solana/spl-token" "^0.2.0"
-    "@solana/wallet-adapter-react" "^0.15.4"
     cross-fetch "^3.1.5"
     form-data "^4.0.0"
 
@@ -1478,7 +1477,7 @@
     "@solana/wallet-adapter-base" "^0.9.4"
     "@solana/wallet-adapter-react" "^0.15.3"
 
-"@solana/wallet-adapter-react@^0.15.3", "@solana/wallet-adapter-react@^0.15.4":
+"@solana/wallet-adapter-react@^0.15.3":
   version "0.15.5"
   resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-react/-/wallet-adapter-react-0.15.5.tgz#20fa5d1044b24778cc2c504ff9668d353b4bcc92"
   integrity sha512-R5VVrJE4RYAF0d8EAAOtWTRCNoMM76ocmLl3SjORCpkCvNq5x7mh3yKBjKNv/kcihkVnDi1kgCtMiJuDX/x+lQ==
