@@ -15,9 +15,6 @@ import {
 } from "@solana/wallet-adapter-wallets";
 import React, { FC, PropsWithChildren, useMemo } from "react";
 
-// Default styles that can be overridden by your app
-require("@solana/wallet-adapter-react-ui/styles.css");
-
 export const Wallet: FC<PropsWithChildren<{}>> = ({ children }) => {
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
   const network = WalletAdapterNetwork.Mainnet;
