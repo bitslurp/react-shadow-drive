@@ -35,7 +35,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import "@project-serum/anchor";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import format from "date-fns/format";
