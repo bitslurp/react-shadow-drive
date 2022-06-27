@@ -44,7 +44,7 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         render={({ field }) => (
           <TextField
             {...field}
-            sx={{ marginRight: 3 }}
+            type="number"
             label="Storage Space"
             variant="standard"
           />
@@ -55,7 +55,7 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         name="storageUnit"
         control={control}
         render={({ field }) => (
-          <FormControl>
+          <FormControl variant="standard">
             <InputLabel id="demo-simple-select-label">Unit</InputLabel>
             <Select labelId="demo-simple-select-label" label="Unit" {...field}>
               <MenuItem value="KB">kb</MenuItem>

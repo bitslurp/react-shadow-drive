@@ -27,6 +27,7 @@ export type StorageAccountAction =
   | "deleting"
   | "polling"
   | "makingImmutable"
+  | "reducingSize"
   | "cancellingDeletion";
 
 export type FileAccountAction =
@@ -89,6 +90,7 @@ export type UseShadowDriveOptions = {
 };
 
 export type UseShadowDriveReturnValue = {
+  ready: boolean;
   /**
    * Whether general requests are in progress, such as the request for storage accounts
    */
@@ -162,6 +164,13 @@ export type UseShadowDriveReturnValue = {
     account: StorageAccountResponse
   ) => Promise<void>;
   /**
+   * Reduce storage account size
+   */
+  reduceStorage: (
+    accountResponse: StorageAccountResponse,
+    size: Pick<StorageAccountInfo, "storageSpace" | "storageUnit">
+  ) => Promise<void>;
+  /**
    * Refresh account belonging to active wallet/connection
    */
   refreshStorageAccounts: () => Promise<void>;
@@ -222,12 +231,7 @@ export function useShadowDrive({
     useState<StorageAccountResponse[]>();
   const [filesByKey, setFilesByStorageKey] = useState<FilesRecord>({});
   const copyToClipboard = (fileData: ShadowFileData): void => {
-    navigator.clipboard.writeText(
-      getShadowDriveFileUrl(
-        fileData.account.storageAccount.toString(),
-        fileData.account.name
-      )
-    );
+    navigator.clipboard.writeText(getShadowDriveFileUrl(fileData.account));
 
     onCopiedToClipboard?.();
   };
@@ -236,21 +240,24 @@ export function useShadowDrive({
     file: ShdwFileAccount,
     action?: FileAccountAction
   ) => {
-    setFileActions({
+    setFileActions((fileActions) => ({
       ...fileActions,
       [fileIdentity(file)]: action,
-    });
+    }));
   };
 
   const updateStorageAction = (
     account: StorageAccountResponse,
     action?: StorageAccountAction
   ) => {
-    setStorageActions({
+    setStorageActions((storageActions) => ({
       ...storageActions,
       [account.publicKey.toString()]: action,
-    });
+    }));
   };
+
+  const clearStorageAction = (account: StorageAccountResponse) =>
+    updateStorageAction(account, undefined);
 
   const replaceStorageAccount = (
     replacement: StorageAccount,
@@ -350,7 +357,7 @@ export function useShadowDrive({
 
       setStorageAccounts(accounts);
 
-      getFilesForAllStorageAccounts(accounts);
+      // getFilesForAllStorageAccounts(accounts);
     } catch (e) {
       console.error(e);
 
@@ -432,7 +439,7 @@ export function useShadowDrive({
         const accountKeyString = fileData.account.storageAccount.toString();
         await drive.editFile(
           fileData.account.storageAccount,
-          getShadowDriveFileUrl(accountKeyString, fileName),
+          getShadowDriveFileUrl(fileData.account),
           new File([replacementFile], fileName, { type: replacementFile.type })
         );
 
@@ -510,7 +517,6 @@ export function useShadowDrive({
             ...filesByKey,
             [key]: replacement,
           });
-          // updateFileAction(fileData.account);
         },
         timeout: pollingInterval,
       });
@@ -534,10 +540,7 @@ export function useShadowDrive({
 
         await drive.deleteFile(
           storageAccount,
-          getShadowDriveFileUrl(
-            storageAccount.toString(),
-            fileData.account.name
-          )
+          getShadowDriveFileUrl(fileData.account)
         );
 
         updateFileAction(fileData.account, "polling");
@@ -572,7 +575,7 @@ export function useShadowDrive({
 
       await drive.cancelDeleteFile(
         storageAccount,
-        getShadowDriveFileUrl(storageAccount.toString(), fileData.account.name)
+        getShadowDriveFileUrl(fileData.account)
       );
 
       onFileRequestSuccess?.("cancellingDeletion", name, fileData);
@@ -611,12 +614,12 @@ export function useShadowDrive({
       pollRequest({
         request: () => drive.getStorageAccount(accountResponse.publicKey),
         shouldStop: (account) => account.toBeDeleted,
-        onFailure: () => updateStorageAction(accountResponse),
+        onFailure: () => clearStorageAction(accountResponse),
         onStop: (account) => {
           setStorageAccounts(
             replaceStorageAccount(account, accountResponse.publicKey)
           );
-          updateStorageAction(accountResponse);
+          clearStorageAction(accountResponse);
         },
         timeout: pollingInterval,
       });
@@ -624,7 +627,7 @@ export function useShadowDrive({
       console.error(e);
 
       onStorageRequestError?.("deleting", identifier, accountResponse);
-      updateStorageAction(accountResponse);
+      clearStorageAction(accountResponse);
       throw e;
     }
   };
@@ -649,9 +652,9 @@ export function useShadowDrive({
         pollRequest({
           request: () => drive.getStorageAccount(accountResponse.publicKey),
           shouldStop: (account) => !account.toBeDeleted,
-          onFailure: () => updateStorageAction(accountResponse),
+          onFailure: () => clearStorageAction(accountResponse),
           onStop: (replacement) => {
-            updateStorageAction(accountResponse);
+            clearStorageAction(accountResponse);
             setStorageAccounts(
               replaceStorageAccount(replacement, accountResponse.publicKey)
             );
@@ -665,7 +668,7 @@ export function useShadowDrive({
           identifier,
           accountResponse
         );
-        updateStorageAction(accountResponse);
+        clearStorageAction(accountResponse);
         throw e;
       }
     },
@@ -699,7 +702,53 @@ export function useShadowDrive({
       );
       throw e;
     } finally {
-      updateStorageAction(accountResponse);
+      clearStorageAction(accountResponse);
+    }
+  };
+
+  const reduceStorage = async (
+    accountResponse: StorageAccountResponse,
+    size: Pick<StorageAccountInfo, "storageSpace" | "storageUnit">
+  ) => {
+    assertDrive();
+
+    try {
+      updateStorageAction(accountResponse, "reducingSize");
+      await drive.reduceStorage(
+        accountResponse.publicKey,
+        size.storageSpace + size.storageUnit
+      );
+
+      updateStorageAction(accountResponse, "polling");
+      onStorageRequestSuccess?.(
+        "reducingSize",
+        accountResponse.account.identifier,
+        accountResponse
+      );
+      pollRequest({
+        request: async () => {
+          return await drive.getStorageAccount(accountResponse.publicKey);
+        },
+        shouldStop: (response) => {
+          clearStorageAction(accountResponse);
+          return response.storage < accountResponse.account.storage;
+        },
+        onFailure: () => {},
+        onStop: (replacement) => {
+          replaceStorageAccount(replacement, accountResponse.publicKey);
+          clearStorageAction(accountResponse);
+        },
+        timeout: pollingInterval,
+      });
+    } catch (e) {
+      clearStorageAction(accountResponse);
+      onStorageRequestError?.(
+        "reducingSize",
+        accountResponse.account.identifier,
+        accountResponse
+      );
+
+      throw e;
     }
   };
 
@@ -739,12 +788,6 @@ export function useShadowDrive({
       : typeof storageActions[account.publicKey.toString()] !== "undefined";
 
   useEffect(() => {
-    if (drive) {
-      refreshStorageAccounts();
-    }
-  }, [drive]);
-
-  useEffect(() => {
     createDrive();
   }, [connection, wallet?.publicKey]);
 
@@ -753,6 +796,7 @@ export function useShadowDrive({
   ).filter((info) => !!info);
 
   return {
+    ready: Boolean(drive),
     isFileActionPending,
     isStorageActionPending,
     loading,
@@ -772,6 +816,7 @@ export function useShadowDrive({
     deleteFile,
     deleteStorageAccount,
     makeStorageAccountImmutable,
+    reduceStorage,
     refreshStorageAccounts,
     refreshStorageAccount,
     replaceFile,

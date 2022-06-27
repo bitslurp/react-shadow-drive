@@ -1,4 +1,7 @@
 {
+  "file-manager-title": "Shadow Box File Manager",
+  "file-manager-menu-button": "Menu",
+  "file-manager-storage-list": "Storage Folders",
   "file-manager-file-deleting-success": "{{identifier}} marked for deletion",
   "file-manager-file-deleting-error": "Error: Failed to mark {{identifier}} for deletion",
   "file-manager-file-cancellingDeletion-success": "{{identifier}} deletion has been cancelled",

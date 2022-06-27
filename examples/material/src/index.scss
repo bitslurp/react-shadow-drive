@@ -20,3 +20,16 @@ body,
   box-sizing: border-box;
   height: 100%;
 }
+
+*::-webkit-scrollbar {
+  width: 10px;
+  background-color: #666; /* or add it to the track */
+  padding: 1px;
+}
+
+/* Add a thumb */
+*::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+  margin: 1px;
+}

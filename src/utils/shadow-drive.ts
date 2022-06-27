@@ -101,8 +101,11 @@ export const getFileAccount = async (
   return accountsCoder.decode<ShdwFileAccount>("File", fileAccountInfo.data);
 };
 
-export const getShadowDriveFileUrl = (accountKey: string, fileName: string) => {
-  return `https://shdw-drive.genesysgo.net/${accountKey}/${fileName}`;
+export const getShadowDriveFileUrl = ({
+  storageAccount,
+  name,
+}: ShdwFileAccount) => {
+  return `https://shdw-drive.genesysgo.net/${storageAccount.toString()}/${name}`;
 };
 
 // TODO: Add retry number to account for successive request failure

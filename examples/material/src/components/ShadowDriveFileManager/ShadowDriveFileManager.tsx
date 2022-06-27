@@ -4,11 +4,13 @@ import FileIcon from "@mui/icons-material/FilePresent";
 import FolderIcon from "@mui/icons-material/Folder";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import MenuIcon from "@mui/icons-material/MoreVert";
+import MenuIcon from "@mui/icons-material/Menu";
+import VertMenuIcon from "@mui/icons-material/MoreVert";
 import UploadIcon from "@mui/icons-material/UploadFile";
 import {
   Alert,
   AlertTitle,
+  AppBar,
   Avatar,
   Box,
   Button,
@@ -18,6 +20,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Drawer,
   Fab,
   IconButton,
   LinearProgress,
@@ -36,12 +39,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import format from "date-fns/format";
 import React, {
   FunctionComponent,
   PropsWithChildren,
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -65,6 +70,7 @@ export const ShadowDriveFileManager: FunctionComponent<
   const [accountDeletionDialogOpen, setAccountDeletionDialogOpen] =
     useState(false);
   const [storageFormOpen, setStorageFormOpen] = useState(false);
+  const [displayMobileMenu, setDisplayMobileMenu] = useState(false);
   const [fileUploadOpen, setFileUploadOpen] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
@@ -95,11 +101,13 @@ export const ShadowDriveFileManager: FunctionComponent<
   const handleCloseAccountDeletionDialog = () =>
     setAccountDeletionDialogOpen(false);
   const {
+    ready,
     isFileActionPending,
     isStorageActionPending,
     pendingStorageAccounts,
     loading,
     storageAccounts,
+    refreshStorageAccounts,
     refreshStorageAccountFiles,
     replaceFile,
     refreshStorageAccount,
@@ -136,11 +144,16 @@ export const ShadowDriveFileManager: FunctionComponent<
       ),
   });
 
-  const selectedAccountResponse = selectedAccountKey
-    ? storageAccounts?.find((account) =>
-        account.publicKey.equals(selectedAccountKey)
-      )
-    : storageAccounts?.[0];
+  useEffect(() => {
+    refreshStorageAccounts();
+  }, [ready]);
+
+  const selectedAccountResponse =
+    selectedAccountKey &&
+    storageAccounts?.find((account) =>
+      account.publicKey.equals(selectedAccountKey)
+    );
+
   const selectedAccountKeyString =
     selectedAccountResponse?.publicKey.toString();
 
@@ -195,94 +208,170 @@ export const ShadowDriveFileManager: FunctionComponent<
     [createStorageAccount, handleCloseStorageForm]
   );
 
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "0.5fr 2fr" }}>
-      <Box>
-        {!loading && storageAccounts?.length === 0 && (
-          <Box paddingTop={2}>
-            <Alert severity="info">
-              <AlertTitle>
-                {t("file-manager-no-accounts-notification-title")}
-              </AlertTitle>
-              {t("file-manager-no-accounts-notification-message")}
-            </Alert>
-          </Box>
-        )}
-        <Box padding={2} paddingBottom={1}>
-          <Button
-            disabled={!wallet?.publicKey}
-            onClick={() => setStorageFormOpen(true)}
-          >
-            {t("file-manager-add-storage-btn")}
-          </Button>
+  const drawerWidth = 400;
+
+  const drawer = (
+    <Box style={{ flex: 1 }} sx={{ bgcolor: "background.paper" }}>
+      {!loading && storageAccounts?.length === 0 && (
+        <Box paddingTop={2}>
+          <Alert severity="info">
+            <AlertTitle>
+              {t("file-manager-no-accounts-notification-title")}
+            </AlertTitle>
+            {t("file-manager-no-accounts-notification-message")}
+          </Alert>
         </Box>
-        <List sx={{ minWidth: 360, bgcolor: "background.paper" }}>
-          {Object.values(pendingStorageAccounts).map(({ accountName }) => (
-            <ListItem style={{ opacity: 0.6 }} key={accountName}>
-              <ListItemAvatar>
-                <Avatar>
-                  <CircularProgress />
-                </Avatar>
-              </ListItemAvatar>
-
-              <ListItemText
-                primary={
-                  <Typography>
-                    {t("file-manager-account-adding-storage", { accountName })}
-                  </Typography>
-                }
-              />
-            </ListItem>
-          ))}
-          {sortedStorageAccounts &&
-            sortedStorageAccounts.map((accountResponse) => {
-              const { account, publicKey } = accountResponse;
-              const accountPublicKeyString = publicKey.toString();
-              const files = getStorageAccountFiles(accountResponse);
-
-              return (
-                <ListItemButton
-                  divider
-                  selected={accountPublicKeyString === selectedAccountKeyString}
-                  key={accountPublicKeyString}
-                  onClick={() => {
-                    refreshStorageAccountFiles(accountResponse);
-                    refreshStorageAccount(accountResponse);
-                    setSelectedAccountKey(accountResponse.publicKey);
-                    setSelectedFileTab("files");
-                  }}
-                >
-                  <ListItemAvatar>
-                    <Avatar>
-                      <FolderIcon />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Typography>
-                        {account.identifier}{" "}
-                        {files &&
-                          `(${files.length} ${
-                            files.length === 1 ? "file" : "files"
-                          })`}
-                      </Typography>
-                    }
-                    secondary={t("file-manager-account-created", {
-                      date: format(
-                        new Date(account.creationTime * 1000),
-                        "do MMM yyyy"
-                      ),
-                    })}
-                  />
-                  <ListItemIcon>
-                    <ChevronRight />
-                  </ListItemIcon>
-                </ListItemButton>
-              );
-            })}
-        </List>
+      )}
+      <Box padding={2} paddingBottom={1}>
+        <Button
+          disabled={!wallet?.publicKey}
+          onClick={() => setStorageFormOpen(true)}
+        >
+          {t("file-manager-add-storage-btn")}
+        </Button>
       </Box>
-      <Box sx={{ bgcolor: "#333" }}>
+      <List sx={{ minWidth: 360, bgcolor: "background.paper" }}>
+        {Object.values(pendingStorageAccounts).map(({ accountName }) => (
+          <ListItem style={{ opacity: 0.6 }} key={accountName}>
+            <ListItemAvatar>
+              <Avatar>
+                <CircularProgress />
+              </Avatar>
+            </ListItemAvatar>
+
+            <ListItemText
+              primary={
+                <Typography>
+                  {t("file-manager-account-adding-storage", { accountName })}
+                </Typography>
+              }
+            />
+          </ListItem>
+        ))}
+        {sortedStorageAccounts &&
+          sortedStorageAccounts.map((accountResponse) => {
+            const { account, publicKey } = accountResponse;
+            const accountPublicKeyString = publicKey.toString();
+            const files = getStorageAccountFiles(accountResponse);
+
+            return (
+              <ListItemButton
+                divider
+                selected={accountPublicKeyString === selectedAccountKeyString}
+                key={accountPublicKeyString}
+                onClick={() => {
+                  setDisplayMobileMenu(false);
+                  refreshStorageAccountFiles(accountResponse);
+                  refreshStorageAccount(accountResponse);
+                  setSelectedAccountKey(accountResponse.publicKey);
+                  setSelectedFileTab("files");
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar>
+                    <FolderIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography>
+                      {account.identifier}{" "}
+                      {`(${formatBytes(
+                        +accountResponse.account.storage.toString()
+                      )})`}
+                    </Typography>
+                  }
+                  secondary={t("file-manager-account-created", {
+                    date: format(
+                      new Date(account.creationTime * 1000),
+                      "do MMM yyyy"
+                    ),
+                  })}
+                />
+                <ListItemIcon>
+                  <ChevronRight />
+                </ListItemIcon>
+              </ListItemButton>
+            );
+          })}
+      </List>
+    </Box>
+  );
+  return (
+    <Box sx={{ display: "flex" }}>
+      <Box
+        component="nav"
+        sx={{ width: { md: drawerWidth }, flexShrink: { xs: 0 } }}
+        aria-label={t("file-manager-storage-list")}
+      >
+        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+        <Drawer
+          variant="temporary"
+          open={displayMobileMenu}
+          onClose={() => setDisplayMobileMenu(false)}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: { xs: "block", sm: "block", md: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+              height: "100vh",
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="persistent"
+          sx={{
+            display: { xs: "none", sm: "none", md: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          width: { m: `calc(100% - ${drawerWidth}px)` },
+          bgcolor: "#333",
+          height: "100vh",
+          overflow: "auto",
+        }}
+      >
+        <AppBar
+          sx={{
+            p: 2,
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+          position="sticky"
+        >
+          <IconButton
+            aria-label={t("file-manager-menu-button")}
+            size="large"
+            edge="start"
+            color="inherit"
+            sx={{ mr: 2, display: { xs: "block", sm: "block", md: "none" } }}
+            onClick={() => setDisplayMobileMenu(true)}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            {t("file-manager-title")}
+          </Typography>
+          <WalletMultiButton />
+        </AppBar>
         {pollingSelectedAccount && (
           <LinearProgress aria-describedby="pollingAlert" />
         )}
@@ -298,7 +387,7 @@ export const ShadowDriveFileManager: FunctionComponent<
                     <Tooltip
                       title={t("file-manager-account-immutable-tooltip")}
                     >
-                      <LockIcon aria-labe fontSize="small" />
+                      <LockIcon fontSize="small" />
                     </Tooltip>
                   ) : (
                     <Tooltip title={t("file-manager-account-mutable-tooltip")}>
@@ -447,7 +536,7 @@ export const ShadowDriveFileManager: FunctionComponent<
                               {updating ? (
                                 <CircularProgress size={16} />
                               ) : (
-                                <MenuIcon />
+                                <VertMenuIcon />
                               )}
                             </IconButton>
                           }
@@ -462,10 +551,7 @@ export const ShadowDriveFileManager: FunctionComponent<
                                     objectFit: "cover",
                                     objectPosition: "center center",
                                   }}
-                                  src={getShadowDriveFileUrl(
-                                    selectedAccountKeyString as string,
-                                    fileAccount.name
-                                  )}
+                                  src={getShadowDriveFileUrl(fileAccount)}
                                 />
                               ) : (
                                 <FileIcon />
@@ -521,7 +607,7 @@ export const ShadowDriveFileManager: FunctionComponent<
                               {updating ? (
                                 <CircularProgress size={16} />
                               ) : (
-                                <MenuIcon />
+                                <VertMenuIcon />
                               )}
                             </IconButton>
                           }
@@ -536,10 +622,7 @@ export const ShadowDriveFileManager: FunctionComponent<
                                     objectFit: "cover",
                                     objectPosition: "center center",
                                   }}
-                                  src={getShadowDriveFileUrl(
-                                    selectedAccountKeyString as string,
-                                    fileAccount.name
-                                  )}
+                                  src={getShadowDriveFileUrl(fileAccount)}
                                 />
                               ) : (
                                 <FileIcon />
@@ -574,7 +657,9 @@ export const ShadowDriveFileManager: FunctionComponent<
           <DialogContentText id="add-storage-dialog-description">
             {t("add-storage-dialog-description")}
           </DialogContentText>
-          <StorageAccountForm onSubmit={handleCreateAccount} />
+          <Box mt={2}>
+            <StorageAccountForm onSubmit={handleCreateAccount} />
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseStorageForm}>
@@ -752,7 +837,7 @@ export const ShadowDriveFileManager: FunctionComponent<
           })}
         </FileUploadForm>
       )}
-    </div>
+    </Box>
   );
 };
 
