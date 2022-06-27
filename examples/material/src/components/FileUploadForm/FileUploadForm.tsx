@@ -118,6 +118,11 @@ export const FileUploadForm: FunctionComponent<
     }
   };
 
+  const handleClose = () => {
+    setFiles(undefined);
+    onClose();
+  };
+
   const fileArray = files ? Array.from(files) : [];
   const invalidFileNames = fileArray.some((f) => f.name.length > 20);
 
@@ -128,16 +133,21 @@ export const FileUploadForm: FunctionComponent<
         aria-labelledby={`${id}-title`}
         aria-describedby={`${id}-description`}
         open={open}
-        onClose={onClose}
+        onClose={handleClose}
       >
         <DialogTitle id={`${id}-title`}>{title}</DialogTitle>
         <DialogContent>
           <DialogContentText id={`${id}-description`}>
-            {children}
+            {!submitting && children}
           </DialogContentText>
 
           {submitting ? (
-            <Box display="flex" justifyContent="center">
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              sx={{ minWidth: "200px" }}
+            >
               <Box marginBottom={2}>Uploading...</Box>
 
               <CircularProgress />
@@ -188,7 +198,9 @@ export const FileUploadForm: FunctionComponent<
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button disabled={submitting} onClick={handleClose}>
+            Close
+          </Button>
           <Button
             onClick={handleSubmit}
             disabled={!filesDropped || invalidFileNames || submitting}
