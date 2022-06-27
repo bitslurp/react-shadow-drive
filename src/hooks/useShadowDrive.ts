@@ -436,7 +436,7 @@ export function useShadowDrive({
       const fileName = fileData.account.name;
       try {
         updateFileAction(fileData.account, "replacing");
-        const accountKeyString = fileData.account.storageAccount.toString();
+
         await drive.editFile(
           fileData.account.storageAccount,
           getShadowDriveFileUrl(fileData.account),
@@ -504,12 +504,8 @@ export function useShadowDrive({
             connection
           );
         },
-        shouldStop: (files) => {
-          const r = namesArr.every((name) =>
-            files.some((r) => r.account.name === name)
-          );
-          return r;
-        },
+        shouldStop: (files) =>
+          namesArr.every((name) => files.some((r) => r.account.name === name)),
         onFailure: () => {},
         onStop: (replacement) => {
           const key = accountResponse.publicKey.toString();
@@ -694,15 +690,28 @@ export function useShadowDrive({
         accountResponse.account.identifier,
         accountResponse
       );
+
+      updateStorageAction(accountResponse, "polling");
+      pollRequest({
+        request: () => drive.getStorageAccount(accountResponse.publicKey),
+        shouldStop: ({ immutable }) => immutable,
+        onFailure: () => clearStorageAction(accountResponse),
+        onStop: (replacement) => {
+          setStorageAccounts(
+            replaceStorageAccount(replacement, accountResponse.publicKey)
+          );
+          clearStorageAction(accountResponse);
+        },
+        timeout: pollingInterval,
+      });
     } catch (e) {
       onStorageRequestError?.(
         "makingImmutable",
         accountResponse.account.identifier,
         accountResponse
       );
-      throw e;
-    } finally {
       clearStorageAction(accountResponse);
+      throw e;
     }
   };
 
@@ -726,17 +735,15 @@ export function useShadowDrive({
         accountResponse
       );
       pollRequest({
-        request: async () => {
-          return await drive.getStorageAccount(accountResponse.publicKey);
-        },
-        shouldStop: (response) => {
-          clearStorageAction(accountResponse);
-          return response.storage < accountResponse.account.storage;
-        },
-        onFailure: () => {},
+        request: () => drive.getStorageAccount(accountResponse.publicKey),
+        shouldStop: (response) =>
+          response && response.storage < accountResponse.account.storage,
+        onFailure: () => clearStorageAction(accountResponse),
         onStop: (replacement) => {
-          replaceStorageAccount(replacement, accountResponse.publicKey);
           clearStorageAction(accountResponse);
+          setStorageAccounts(
+            replaceStorageAccount(replacement, accountResponse.publicKey)
+          );
         },
         timeout: pollingInterval,
       });
@@ -788,6 +795,11 @@ export function useShadowDrive({
       : typeof storageActions[account.publicKey.toString()] !== "undefined";
 
   useEffect(() => {
+    setDrive(undefined);
+    setStorageAccounts(undefined);
+    setStorageActions({});
+    setFileActions({});
+    setFilesByStorageKey({});
     createDrive();
   }, [connection, wallet?.publicKey]);
 

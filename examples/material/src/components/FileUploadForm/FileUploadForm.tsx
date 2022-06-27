@@ -137,10 +137,11 @@ export const FileUploadForm: FunctionComponent<
           </DialogContentText>
 
           {submitting ? (
-            <div style={{ textAlign: "center" }}>
+            <Box display="flex" justifyContent="center">
               <Box marginBottom={2}>Uploading...</Box>
+
               <CircularProgress />
-            </div>
+            </Box>
           ) : (
             !files?.length && (
               <Box marginY={4} style={{ textAlign: "center" }}>

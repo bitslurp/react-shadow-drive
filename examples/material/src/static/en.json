@@ -1,5 +1,8 @@
 {
   "file-manager-title": "Shadow Box File Manager",
+  "file-manager-connect-wallet-title": "Welcome!",
+  "file-manager-connect-wallet-intro": "Please connect your wallet to get started.",
+  "file-manager-select-storage-account": "Select a storage space from the menu to start managing your files.",
   "file-manager-menu-button": "Menu",
   "file-manager-storage-list": "Storage Folders",
   "file-manager-file-deleting-success": "{{identifier}} marked for deletion",
@@ -18,27 +21,30 @@
   "file-manager-account-makingImmutable-error": "Error: Failed to make storage immutable",
   "file-manager-account-cancellingDeletion-success": "Deletion of storage cancelled",
   "file-manager-account-cancellingDeletion-error": "Error: Failed to cancel storage deletion",
+  "file-manager-account-reducingSize-success": "Reduced size of {{identifier}}!",
+  "file-manager-account-reducingSize-error": "Error: Failed to reduce storage space",
   "file-manager-account-adding-storage": "Adding Storage: {{accountName}}",
   "file-manager-account-files-tab": "Files",
   "file-manager-account-deleted-files-tab": "Trash",
-  "file-manager-account-files-empty": "No files uploaded",
-  "file-manager-account-deleted-files-empty": "Empty",
+  "file-manager-account-files-empty": "No files. Click the button on bottom left to upload some.",
+  "file-manager-account-deleted-files-empty": "Trash Empty.",
   "file-manager-account-immutable-tooltip": "Storage frozen permanently",
-  "file-manager-account-mutable-tooltip": "Storage still mutable",
+  "file-manager-account-mutable-tooltip": "Freeze storage space",
+  "file-manager-account-reduce-storage-btn": "Reduce",
 
-  "file-manager-delete-account-btn": "Delete Storage",
+  "file-manager-delete-account-btn": "Delete Storage Space",
   "file-manager-upload-btn": "Upload Files",
 
-  "file-manager-account-capacity": "{{availableSpace}} of {{totalSpace}} remaining",
+  "file-manager-account-capacity": "{{availableSpace}} of {{totalSpace}} availale",
   "file-manager-account-created": "Created: {{date}}",
 
   "file-manager-no-accounts-notification-title": "No storage folders found",
   "file-manager-no-accounts-notification-message": "Please add some storage to enable file uploads.",
 
   "file-manager-account-deletion-notification-title": "To be deleted",
-  "file-manager-account-deletion-notification-message": "Storage marked for deletion on next Solana epoch. If this is a mistake please click undo",
+  "file-manager-account-deletion-notification-message": "Storage marked for deletion on next Solana epoch, if this is a mistake please click undo.",
   "file-manager-account-polling-notification-title": "Refreshing Info",
-  "file-manager-account-polling-notification-message": "Awaiting storage info update, sometimes changes take a little while to persist",
+  "file-manager-account-polling-notification-message": "Awaiting storage info update, sometimes changes take a little while to persist on chain.",
   "file-manager-undo-delete-storage-btn": "Undo",
   "file-manager-add-storage-btn": "Add Storage",
 
@@ -50,7 +56,7 @@
   "file-upload-form-replace-title": "Replace File",
   "file-upload-form-replace-text": "Replace {{fileName}}",
   "file-upload-form-upload-title": "Upload Files",
-  "file-upload-form-upload-text": "Uplod your files. Currently limited to 5 max.",
+  "file-upload-form-upload-text": "Upload your files, multuple file uploads are currently limited to 5 max.",
 
   "delete-account-dialog-title": "Delete Storage",
   "delete-account-dialog-description-deleting": "Marking Storage For Deletion...",
@@ -66,5 +72,15 @@
   "add-storage-dialog-title": "Add Storage",
   "add-storage-dialog-description": "Enter configuration for your new storage folder.",
   "add-storage-dialog-confirm-btn": "Create",
-  "add-storage-dialog-cancel-btn": "Close"
+  "add-storage-dialog-cancel-btn": "Close",
+
+  "immutable-storage-dialog-title": "Freeze Storage Space",
+  "immutable-storage-dialog-description": "Are you sure you want to do this? Freezing the space will make it immutable, you will not be able to edit or delete the space or it's files.",
+  "immutable-storage-dialog-cancel-btn": "Cancel",
+  "immutable-storage-dialog-confirm-btn": "Do it",
+
+  "reduce-storage-dialog-title": "Reduce Storage Space",
+  "reduce-storage-dialog-description": "Enter the amount you would like to reduce your space by:",
+  "reduce-storage-dialog-cancel-btn": "Cancel",
+  "reduce-storage-dialog-confirm-btn": "Reduce"
 }
