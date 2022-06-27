@@ -11,9 +11,11 @@ import type { StorageAccountInfo } from "react-shadow-drive";
 
 export type AccountFormProps = {
   onSubmit: (data: StorageAccountInfo) => void;
+  spaceOnly?: boolean;
 };
 
 export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
+  spaceOnly,
   onSubmit,
 }) => {
   const { control, handleSubmit } = useForm<StorageAccountInfo>({
@@ -25,18 +27,20 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
   });
   return (
     <form id="storage-account-form" onSubmit={handleSubmit(onSubmit)}>
-      <Controller
-        name="accountName"
-        control={control}
-        render={({ field }) => (
-          <TextField
-            {...field}
-            sx={{ marginRight: 3 }}
-            label="Folder Name"
-            variant="standard"
-          />
-        )}
-      />
+      {!spaceOnly && (
+        <Controller
+          name="accountName"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              sx={{ marginRight: 3 }}
+              label="Folder Name"
+              variant="standard"
+            />
+          )}
+        />
+      )}
 
       <Controller
         name="storageSpace"
@@ -44,7 +48,7 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         render={({ field }) => (
           <TextField
             {...field}
-            sx={{ marginRight: 3 }}
+            type="number"
             label="Storage Space"
             variant="standard"
           />
@@ -55,7 +59,7 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         name="storageUnit"
         control={control}
         render={({ field }) => (
-          <FormControl>
+          <FormControl variant="standard">
             <InputLabel id="demo-simple-select-label">Unit</InputLabel>
             <Select labelId="demo-simple-select-label" label="Unit" {...field}>
               <MenuItem value="KB">kb</MenuItem>
