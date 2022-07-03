@@ -1,4 +1,4 @@
-import { BorshAccountsCoder } from "@project-serum/anchor";
+import * as anchor from "@project-serum/anchor";
 import { StorageAccountResponse } from "@shadow-drive/sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { IDL } from "./idl";
@@ -19,7 +19,7 @@ export type ShadowFileData = {
 const GB_BYTES = 1_073_741_824;
 const MB_BYTES = 1_048_576;
 const KB_BYTES = 1_024;
-const accountsCoder = new BorshAccountsCoder(IDL);
+const accountsCoder = new anchor.BorshAccountsCoder(IDL);
 
 export const formatBytes = (bytes: number) => {
   if (bytes < MB_BYTES) {
