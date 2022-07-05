@@ -51,6 +51,7 @@ const rejectStyle = {
   borderColor: "#ff1744",
 };
 
+const textEncoder = new TextEncoder();
 export const FileUploadForm: FunctionComponent<
   PropsWithChildren<{
     id: string;
@@ -124,7 +125,10 @@ export const FileUploadForm: FunctionComponent<
   };
 
   const fileArray = files ? Array.from(files) : [];
-  const invalidFileNames = fileArray.some((f) => f.name.length > 20);
+
+  const invalidFileNames = fileArray.some(
+    (f) => textEncoder.encode(f.name).length > 32
+  );
 
   return (
     <>
@@ -146,7 +150,7 @@ export const FileUploadForm: FunctionComponent<
               display="flex"
               flexDirection="column"
               alignItems="center"
-              sx={{ minWidth: "200px" }}
+              sx={{ minWidth: "2000px" }}
             >
               <Box marginBottom={2}>Uploading...</Box>
 
