@@ -189,7 +189,7 @@ export const FileUploadForm: FunctionComponent<
               {invalidFileNames && (
                 <Box marginY={2}>
                   <Alert severity="error">
-                    Max. length for file names is 20 chars
+                    Max. size for file names is 32 bytes
                   </Alert>
                 </Box>
               )}
