@@ -455,7 +455,10 @@ export function useShadowDrive({
       //   throw new Error(RequestError.UserRejection);
       // }
 
-      onFileRequestSuccess?.("uploading", names);
+      onFileRequestSuccess?.(
+        "uploading",
+        names.length > 150 ? names.substring(0, 150) + "..." : names
+      );
 
       refreshStorageAccount(accountResponse);
       refreshStorageAccountFiles(accountResponse);
