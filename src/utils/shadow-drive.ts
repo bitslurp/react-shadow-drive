@@ -1,25 +1,20 @@
-import * as anchor from "@project-serum/anchor";
-import { StorageAccountResponse } from "@shadow-drive/sdk";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { IDL } from "./idl";
+import {
+  ShdwDrive,
+  StorageAccountInfo,
+  StorageAccountResponse,
+} from "@shadow-drive/sdk";
+import { PublicKey } from "@solana/web3.js";
 
-export type ShdwFileAccount = {
-  toBeDeleted: boolean;
-  name: string;
-  size: number;
-  immutable: boolean;
-  storageAccount: PublicKey;
-};
+const SHDW_DRIVE_ENDPOINT = "https://shadow-storage.genesysgo.net";
 
 export type ShadowFileData = {
-  key: PublicKey;
-  account: ShdwFileAccount;
+  name: string;
+  storageAccount: PublicKey;
 };
 
 const GB_BYTES = 1_073_741_824;
 const MB_BYTES = 1_048_576;
 const KB_BYTES = 1_024;
-const accountsCoder = new anchor.BorshAccountsCoder(IDL);
 
 export const formatBytes = (bytes: number) => {
   if (bytes < MB_BYTES) {
@@ -48,65 +43,59 @@ export const getStorageAccountKeys = (accountId: string) => {
   }).then((r) => r.json());
 };
 
-export const getFileAccounts = async (
-  storageAccount: StorageAccountResponse,
-  connection: Connection
-) => {
-  let fileAccounts: Array<Promise<[anchor.web3.PublicKey, number]>> = [];
-  const fileCounter = new anchor.BN(
-    storageAccount.account.initCounter
-  ).toNumber();
-
-  for (let counter = 0; counter < fileCounter; counter++) {
-    let fileSeed = new anchor.BN(counter)
-      .toTwos(64)
-      .toArrayLike(Buffer, "le", 4);
-
-    fileAccounts = fileAccounts.concat(
-      anchor.web3.PublicKey.findProgramAddress(
-        [storageAccount.publicKey.toBytes(), fileSeed],
-        new anchor.web3.PublicKey(
-          "2e1wdyNhUvE76y6yUCvah2KaviavMJYKoRun8acMRBZZ"
-        )
-      )
-    );
-  }
-
-  const accounts = await Promise.all(fileAccounts);
-
-  const files = await connection.getMultipleAccountsInfo(
-    accounts.map((a) => a[0])
-  );
-
-  return files
-    .map((file, i) => {
-      if (file) {
-        return {
-          account: accountsCoder.decode<ShdwFileAccount>("File", file.data),
-          key: accounts[i][0],
-        };
-      }
-
-      return {};
-    })
-    .filter((account) => account.account) as ShadowFileData[];
+export const getFileData = (url: string) => {
+  return fetch(`${SHDW_DRIVE_ENDPOINT}/get-object-data`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      location: url,
+    }),
+  });
 };
 
-export const getFileAccount = async (
-  fileKey: PublicKey,
-  connection: Connection
-) => {
-  const fileAccountInfo = await connection.getAccountInfo(fileKey);
+export const getFiles = async (
+  storageAccount: PublicKey,
+  drive: ShdwDrive
+): Promise<ShadowFileData[]> => {
+  const files = await drive.listObjects(storageAccount);
 
-  return accountsCoder.decode<ShdwFileAccount>("File", fileAccountInfo.data);
+  const { keys } = files;
+
+  return keys.map((key) => ({
+    name: key,
+    storageAccount,
+  }));
 };
 
 export const getShadowDriveFileUrl = ({
   storageAccount,
   name,
-}: ShdwFileAccount) => {
+}: {
+  name: string;
+  storageAccount: PublicKey;
+}) => {
   return `https://shdw-drive.genesysgo.net/${storageAccount.toString()}/${name}`;
 };
+
+export const accountResponseToInfo = ({
+  publicKey,
+  account,
+}: StorageAccountResponse): StorageAccountInfo => ({
+  storage_account: publicKey,
+  reserved_bytes: account.storage,
+  current_usage: account.storageAvailable,
+  immutable: account.immutable,
+  to_be_deleted: account.toBeDeleted,
+  delet_request_epoch: account.deleteRequestEpoch,
+  owner1: account.owner1,
+  account_counter_seed: account.accountCounterSeed,
+  creation_time: account.creationTime,
+  creation_epoch: account.creationEpoch,
+  last_fee_epoch: account.lastFeeEpoch,
+  identifier: account.identifier,
+});
 
 // TODO: Add retry number to account for successive request failure
 export async function pollRequest<T>(
@@ -142,7 +131,8 @@ export async function pollRequest<T>(
       } else {
         setTimeout(() => pollRequest(params), timeout);
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       setTimeout(() => pollRequest(params, failureCount + 1), timeout);
     }
   }

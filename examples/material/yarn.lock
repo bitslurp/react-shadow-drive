@@ -1338,15 +1338,17 @@
     bs58 "^4.0.1"
     eventemitter3 "^4.0.7"
 
-"@shadow-drive/sdk@^2.0.5":
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-2.0.5.tgz#d35f07fbc222e272f91cc5155cf65fbe4b0f5b8c"
-  integrity sha512-TpREH4mQut01WuvBQB8V0bygcjoqLcvHpC6nLxkUBc3nRQDOyNkUq6ZTxxZo2Xr7ZJnNILbCs02ZGf3WDouiCw==
+"@shadow-drive/sdk@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-3.0.1.tgz#145b96571c74f1dfc33226750bbb1ccda7a2681d"
+  integrity sha512-R3xPoLyuDD2ndL+3+V4LEiEW+jIpwReL8TaGFyrARiPeCc5DxKiFj7wnizjpFNrl3PvLrcVGRRtmfOFS+h0MLg==
   dependencies:
     "@project-serum/anchor" "^0.24.2"
     "@solana/spl-token" "^0.2.0"
     cross-fetch "^3.1.5"
     form-data "^4.0.0"
+    node-fetch "2"
+    tweetnacl "^1.0.3"
 
 "@sideway/address@^4.1.3":
   version "4.1.4"
@@ -5173,7 +5175,7 @@ tsutils@^3.21.0:
   dependencies:
     tslib "^1.8.1"
 
-tweetnacl@^1.0.0:
+tweetnacl@^1.0.0, tweetnacl@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-1.0.3.tgz#ac0af71680458d8a6378d0d0d050ab1407d35596"
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==

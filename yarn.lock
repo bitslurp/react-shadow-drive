@@ -1316,15 +1316,17 @@
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
-"@shadow-drive/sdk@^2.0.5":
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-2.0.5.tgz#d35f07fbc222e272f91cc5155cf65fbe4b0f5b8c"
-  integrity sha512-TpREH4mQut01WuvBQB8V0bygcjoqLcvHpC6nLxkUBc3nRQDOyNkUq6ZTxxZo2Xr7ZJnNILbCs02ZGf3WDouiCw==
+"@shadow-drive/sdk@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-3.0.1.tgz#145b96571c74f1dfc33226750bbb1ccda7a2681d"
+  integrity sha512-R3xPoLyuDD2ndL+3+V4LEiEW+jIpwReL8TaGFyrARiPeCc5DxKiFj7wnizjpFNrl3PvLrcVGRRtmfOFS+h0MLg==
   dependencies:
     "@project-serum/anchor" "^0.24.2"
     "@solana/spl-token" "^0.2.0"
     cross-fetch "^3.1.5"
     form-data "^4.0.0"
+    node-fetch "2"
+    tweetnacl "^1.0.3"
 
 "@sideway/address@^4.1.3":
   version "4.1.4"
@@ -3457,7 +3459,7 @@ node-addon-api@^4.3.0:
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.3.0.tgz#52a1a0b475193e0928e98e0426a0d1254782b77f"
   integrity sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==
 
-node-fetch@2.6.7:
+node-fetch@2, node-fetch@2.6.7:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
   integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
@@ -4156,7 +4158,7 @@ tslib@^2.0.3, tslib@^2.1.0, tslib@^2.4.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
 
-tweetnacl@^1.0.0:
+tweetnacl@^1.0.0, tweetnacl@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-1.0.3.tgz#ac0af71680458d8a6378d0d0d050ab1407d35596"
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==

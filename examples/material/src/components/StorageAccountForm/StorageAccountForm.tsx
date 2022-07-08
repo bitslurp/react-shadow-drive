@@ -7,10 +7,10 @@ import {
 } from "@mui/material";
 import React, { FunctionComponent } from "react";
 import { Controller, useForm } from "react-hook-form";
-import type { StorageAccountInfo } from "react-shadow-drive";
+import type { StorageAccountData } from "react-shadow-drive";
 
 export type AccountFormProps = {
-  onSubmit: (data: StorageAccountInfo) => void;
+  onSubmit: (data: StorageAccountData) => void;
   spaceOnly?: boolean;
 };
 
@@ -18,7 +18,7 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
   spaceOnly,
   onSubmit,
 }) => {
-  const { control, handleSubmit } = useForm<StorageAccountInfo>({
+  const { control, handleSubmit } = useForm<StorageAccountData>({
     defaultValues: {
       accountName: "",
       storageSpace: "",
