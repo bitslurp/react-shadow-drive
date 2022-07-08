@@ -4,7 +4,7 @@ A react hook and some helpers/extra typing for [GenesysGo's](https://shdw.genesy
 
 Note: Package API subject to change often in near future
 
-[Material UI Example App](https://shdw-drive.genesysgo.net/HQqZLKbmXHsqEtkyhFYshp6oZtZSyLXLpTxmHpiorGKY/index.html)
+[Material UI Example App](https://shdw-drive.genesysgo.net/iEfzG3sxgC3GL6bjikAiK4DRAG5XFbuBsDy8ypy129w/index.html)
 
 ## Docs
 
