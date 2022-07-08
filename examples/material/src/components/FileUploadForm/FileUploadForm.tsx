@@ -146,7 +146,7 @@ export const FileUploadForm: FunctionComponent<
               display="flex"
               flexDirection="column"
               alignItems="center"
-              sx={{ minWidth: "2000px" }}
+              sx={{ minWidth: "200px" }}
             >
               <Box marginBottom={2}>Uploading...</Box>
 

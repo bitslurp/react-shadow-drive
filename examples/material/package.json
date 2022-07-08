@@ -78,11 +78,5 @@
   },
   "staticFiles": {
     "staticPath": "./src/static"
-  },
-  "parcel-namer-rewrite": {
-    "developmentHashing": true,
-    "rules": {
-      "(.*).js$": "{hash}.js"
-    }
   }
 }
