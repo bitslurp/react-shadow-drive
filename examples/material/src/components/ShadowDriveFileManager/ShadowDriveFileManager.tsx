@@ -163,7 +163,6 @@ export const ShadowDriveFileManager: FunctionComponent<
 
     refreshStorageAccounts();
   }, [ready]);
-  console.log(storageAccounts);
 
   const selectedAccountResponse =
     selectedAccountKey &&
