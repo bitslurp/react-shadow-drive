@@ -6,6 +6,8 @@ Note: Package API subject to change often in near future
 
 [Material UI Example App](https://shdw-drive.genesysgo.net/iEfzG3sxgC3GL6bjikAiK4DRAG5XFbuBsDy8ypy129w/index.html)
 
+The example app was uploaded via itself to ShadowDrive. So there.
+
 ## Docs
 
 [TS Docs](https://willsnowdon.github.io/react-shadow-drive/)
