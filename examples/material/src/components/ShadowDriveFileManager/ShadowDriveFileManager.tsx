@@ -753,6 +753,7 @@ export const ShadowDriveFileManager: FunctionComponent<
               {t("delete-file-dialog-cancel-btn")}
             </Button>
             <Button
+              disabled
               onClick={() => {
                 deleteFile(selectedFile);
                 handleCloseFileDeletionDialog();
