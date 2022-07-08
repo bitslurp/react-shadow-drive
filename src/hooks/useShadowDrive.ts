@@ -409,32 +409,32 @@ export function useShadowDrive({
     });
   };
 
-  const replaceFile = useCallback(
-    async (fileData: ShadowFileData, replacementFile: File) => {
-      assertDrive();
+  const replaceFile = async (
+    fileData: ShadowFileData,
+    replacementFile: File
+  ) => {
+    assertDrive();
 
-      const fileName = fileData.name;
-      try {
-        updateFileAction(fileData, "replacing");
+    const fileName = fileData.name;
+    try {
+      updateFileAction(fileData, "replacing");
 
-        await drive.editFile(
-          fileData.storageAccount,
-          getShadowDriveFileUrl(fileData),
-          new File([replacementFile], fileName, { type: replacementFile.type }),
-          SHDW_DRIVE_VERSION
-        );
+      await drive.editFile(
+        fileData.storageAccount,
+        getShadowDriveFileUrl(fileData),
+        new File([replacementFile], fileName, { type: replacementFile.type }),
+        SHDW_DRIVE_VERSION
+      );
 
-        onFileRequestSuccess?.("replacing", fileName, fileData);
-      } catch (e) {
-        console.error(e);
-
-        throw e;
-      } finally {
-        onFileRequestError?.("replacing", fileName);
-      }
-    },
-    [drive, refreshStorageAccount]
-  );
+      onFileRequestSuccess?.("replacing", fileName, fileData);
+    } catch (e) {
+      console.error(e);
+      onFileRequestError?.("replacing", fileName);
+      throw e;
+    } finally {
+      updateFileAction(fileData);
+    }
+  };
 
   const uploadFiles = async (
     accountResponse: StorageAccountInfo,
