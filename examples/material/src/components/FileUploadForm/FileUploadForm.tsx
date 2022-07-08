@@ -126,10 +126,6 @@ export const FileUploadForm: FunctionComponent<
 
   const fileArray = files ? Array.from(files) : [];
 
-  const invalidFileNames = fileArray.some(
-    (f) => textEncoder.encode(f.name).length > 32
-  );
-
   return (
     <>
       <Dialog
@@ -186,13 +182,6 @@ export const FileUploadForm: FunctionComponent<
                 .map((file) => file.name)
                 .join(", ")}
 
-              {invalidFileNames && (
-                <Box marginY={2}>
-                  <Alert severity="error">
-                    Max. size for file names is 32 bytes
-                  </Alert>
-                </Box>
-              )}
               <Box mt={2}>
                 <Button variant="contained" onClick={() => setFiles(undefined)}>
                   Reset
@@ -205,10 +194,7 @@ export const FileUploadForm: FunctionComponent<
           <Button disabled={submitting} onClick={handleClose}>
             Close
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!filesDropped || invalidFileNames || submitting}
-          >
+          <Button onClick={handleSubmit} disabled={!filesDropped || submitting}>
             Upload
           </Button>
         </DialogActions>

@@ -251,6 +251,15 @@ export function useShadowDrive({
     });
   };
 
+  const getStorageAccount = async (publicKey: PublicKey) => {
+    const account = await drive.getStorageAccount(publicKey);
+
+    // TODO: storage_acount is a string here but should be pubkey. Remove when fixed.
+    account.storage_account = publicKey;
+
+    return account;
+  };
+
   const refreshStorageAccountFiles = useCallback(
     async (account: StorageAccountInfo) => {
       const files = await getFiles(account.storage_account, drive);
@@ -306,12 +315,8 @@ export function useShadowDrive({
 
     try {
       setLoading(true);
-      const refreshedAccount = await drive.getStorageAccount(publicKey);
+      const refreshedAccount = await getStorageAccount(publicKey);
 
-      // TODO: storage_acount is a string here but should be pubkey. Remove when fixed.
-      refreshedAccount.storage_account = new PublicKey(
-        refreshedAccount.storage_account
-      );
       setStorageAccounts(replaceStorageAccount(refreshedAccount));
 
       return refreshedAccount;
@@ -367,7 +372,7 @@ export function useShadowDrive({
         const publicKey = new PublicKey(createAccountResponse.shdw_bucket);
 
         try {
-          const account = await drive.getStorageAccount(publicKey);
+          const account = await getStorageAccount(publicKey);
           setStorageAccounts(storageAccounts.concat(account));
         } catch (e) {
           //
@@ -457,7 +462,7 @@ export function useShadowDrive({
 
       pollRequest({
         request: async () => {
-          const latestStorageAccount = await drive.getStorageAccount(
+          const latestStorageAccount = await getStorageAccount(
             accountResponse.storage_account
           );
           return getFiles(latestStorageAccount.storage_account, drive);
@@ -571,7 +576,7 @@ export function useShadowDrive({
 
       updateStorageAction(accountResponse, "polling");
       pollRequest({
-        request: () => drive.getStorageAccount(accountResponse.storage_account),
+        request: () => getStorageAccount(accountResponse.storage_account),
         shouldStop: (account) => account.to_be_deleted,
         onFailure: () => clearStorageAction(accountResponse),
         onStop: (account) => {
@@ -610,8 +615,7 @@ export function useShadowDrive({
 
         updateStorageAction(accountResponse, "polling");
         pollRequest({
-          request: () =>
-            drive.getStorageAccount(accountResponse.storage_account),
+          request: () => getStorageAccount(accountResponse.storage_account),
           shouldStop: (account) => !account.to_be_deleted,
           onFailure: () => clearStorageAction(accountResponse),
           onStop: (replacement) => {
@@ -659,7 +663,7 @@ export function useShadowDrive({
 
       updateStorageAction(accountResponse, "polling");
       pollRequest({
-        request: () => drive.getStorageAccount(accountResponse.storage_account),
+        request: () => getStorageAccount(accountResponse.storage_account),
         shouldStop: ({ immutable }) => immutable,
         onFailure: () => clearStorageAction(accountResponse),
         onStop: (replacement) => {
@@ -700,7 +704,7 @@ export function useShadowDrive({
         accountResponse
       );
       pollRequest({
-        request: () => drive.getStorageAccount(accountResponse.storage_account),
+        request: () => getStorageAccount(accountResponse.storage_account),
         shouldStop: (response) =>
           response && response.reserved_bytes < accountResponse.reserved_bytes,
         onFailure: () => clearStorageAction(accountResponse),
