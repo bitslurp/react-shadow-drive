@@ -15,6 +15,7 @@ export type ShadowFileData = {
 const GB_BYTES = 1_073_741_824;
 const MB_BYTES = 1_048_576;
 const KB_BYTES = 1_024;
+const PRICE_PER_GB = 250_000_000;
 
 export const formatBytes = (bytes: number) => {
   if (bytes < MB_BYTES) {
@@ -136,4 +137,33 @@ export async function pollRequest<T>(
       setTimeout(() => pollRequest(params, failureCount + 1), timeout);
     }
   }
+}
+
+export function toShdwCost(input: string): number {
+  let chunk_size = 0;
+  let humanReadable = input.toLowerCase();
+  let inputNumber = Number(humanReadable.slice(0, humanReadable.length - 2));
+  let inputDescriptor = humanReadable.slice(
+    humanReadable.length - 2,
+    humanReadable.length
+  );
+
+  switch (inputDescriptor) {
+    case "kb":
+      chunk_size = KB_BYTES;
+      break;
+    case "mb":
+      chunk_size = MB_BYTES;
+      break;
+    case "gb":
+      chunk_size = GB_BYTES;
+      break;
+
+    default:
+      break;
+  }
+
+  const bytes = inputNumber * chunk_size;
+
+  return Math.ceil((bytes / GB_BYTES) * PRICE_PER_GB);
 }

@@ -1,6 +1,6 @@
 {
   "name": "@solana/wallet-adapter-react-ui-starter",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "author": "Solana Maintainers <maintainers@solana.foundation>",
   "repository": "https://github.com/solana-labs/wallet-adapter",
   "license": "Apache-2.0",
@@ -34,7 +34,7 @@
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.0",
     "@project-serum/anchor": "^0.24.2",
-    "@shadow-drive/sdk": "^3.0.1",
+    "@shadow-drive/sdk": "^3.0.2",
     "@solana/wallet-adapter-base": "^0.9.4",
     "@solana/wallet-adapter-react": "^0.15.3",
     "@solana/wallet-adapter-react-ui": "^0.9.5",
@@ -48,7 +48,7 @@
     "react-dropzone": "^14.2.1",
     "react-hook-form": "^7.31.1",
     "react-i18next": "^11.17.1",
-    "react-shadow-drive": "0.1.9",
+    "react-shadow-drive": "0.1.10",
     "stream": "^0.0.2",
     "stream-browserify": "^3.0.0"
   },
@@ -79,4 +79,5 @@
   "staticFiles": {
     "staticPath": "./src/static"
   }
+ 
 }

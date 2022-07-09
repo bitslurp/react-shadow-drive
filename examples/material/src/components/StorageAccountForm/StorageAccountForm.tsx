@@ -1,4 +1,5 @@
 import {
+  Box,
   FormControl,
   InputLabel,
   MenuItem,
@@ -23,48 +24,70 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
       accountName: "",
       storageSpace: "",
       storageUnit: "MB",
+      paymentToken: "SHDW",
     },
   });
   return (
     <form id="storage-account-form" onSubmit={handleSubmit(onSubmit)}>
-      {!spaceOnly && (
+      <Box mb={4}>
+        {!spaceOnly && (
+          <Controller
+            name="accountName"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                sx={{ marginRight: 3 }}
+                label="Folder Name"
+                variant="standard"
+              />
+            )}
+          />
+        )}
+
         <Controller
-          name="accountName"
+          name="storageSpace"
           control={control}
           render={({ field }) => (
             <TextField
               {...field}
-              sx={{ marginRight: 3 }}
-              label="Folder Name"
+              type="number"
+              label="Storage Space"
               variant="standard"
             />
           )}
         />
-      )}
+
+        <Controller
+          name="storageUnit"
+          control={control}
+          render={({ field }) => (
+            <FormControl variant="standard">
+              <InputLabel id="unit-select-label">Unit</InputLabel>
+              <Select labelId="unit-select-label" label="Unit" {...field}>
+                <MenuItem value="KB">kb</MenuItem>
+                <MenuItem value="MB">mb</MenuItem>
+                <MenuItem value="GB">gb</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+        />
+      </Box>
 
       <Controller
-        name="storageSpace"
+        name="paymentToken"
         control={control}
         render={({ field }) => (
-          <TextField
-            {...field}
-            type="number"
-            label="Storage Space"
-            variant="standard"
-          />
-        )}
-      />
-
-      <Controller
-        name="storageUnit"
-        control={control}
-        render={({ field }) => (
-          <FormControl variant="standard">
-            <InputLabel id="demo-simple-select-label">Unit</InputLabel>
-            <Select labelId="demo-simple-select-label" label="Unit" {...field}>
-              <MenuItem value="KB">kb</MenuItem>
-              <MenuItem value="MB">mb</MenuItem>
-              <MenuItem value="GB">gb</MenuItem>
+          <FormControl variant="standard" sx={{ minWidth: "150px" }}>
+            <InputLabel id="payment-token-label">Payment Token</InputLabel>
+            <Select
+              labelId="payment-token-label"
+              label="Payment Token"
+              {...field}
+            >
+              <MenuItem value="SHDW">SHDW</MenuItem>
+              <MenuItem value="SOL">SOL</MenuItem>
+              <MenuItem value="USDC">USDC</MenuItem>
             </Select>
           </FormControl>
         )}

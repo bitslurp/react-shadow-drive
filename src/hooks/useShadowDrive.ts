@@ -6,20 +6,24 @@ import {
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
+import { swapToShdw } from "../utils/jup-ag";
 import {
   accountResponseToInfo,
   getFiles,
   getShadowDriveFileUrl,
   pollRequest,
   ShadowFileData,
+  toShdwCost,
 } from "../utils/shadow-drive";
 
 const SHDW_DRIVE_VERSION = "v2";
 
+type PaymentTokenOptions = "SOL" | "USDC" | "SHDW";
 export type StorageAccountData = {
   accountName: string;
   storageSpace: string;
   storageUnit: string;
+  paymentToken?: PaymentTokenOptions;
 };
 
 export type StorageAccountAction =
@@ -352,48 +356,51 @@ export function useShadowDrive({
     }
   }, [drive]);
 
-  const createStorageAccount = useCallback(
-    async (data: StorageAccountData) => {
-      assertDrive();
+  const createStorageAccount = async (data: StorageAccountData) => {
+    assertDrive();
 
-      const { accountName } = data;
+    const { accountName } = data;
+
+    try {
+      setAccountsCreation({
+        ...accountsCreation,
+        [accountName]: data,
+      });
+
+      if (data.paymentToken && data.paymentToken !== "SHDW") {
+        const amount = toShdwCost(data.storageSpace + data.storageUnit);
+        await swapToShdw(wallet, connection, amount, data.paymentToken);
+      }
+
+      const createAccountResponse = await drive.createStorageAccount(
+        accountName,
+        data.storageSpace + data.storageUnit,
+        SHDW_DRIVE_VERSION
+      );
+
+      const publicKey = new PublicKey(createAccountResponse.shdw_bucket);
 
       try {
-        setAccountsCreation({
-          ...accountsCreation,
-          [accountName]: data,
-        });
-        const createAccountResponse = await drive.createStorageAccount(
-          accountName,
-          data.storageSpace + data.storageUnit,
-          SHDW_DRIVE_VERSION
-        );
-
-        const publicKey = new PublicKey(createAccountResponse.shdw_bucket);
-
-        try {
-          const account = await getStorageAccount(publicKey);
-          setStorageAccounts(storageAccounts.concat(account));
-        } catch (e) {
-          //
-          console.error(e);
-        }
-
-        onStorageRequestSuccess?.("creating", accountName);
+        const account = await getStorageAccount(publicKey);
+        setStorageAccounts(storageAccounts.concat(account));
       } catch (e) {
+        //
         console.error(e);
-        onStorageRequestError?.("creating", accountName);
-
-        throw e;
-      } finally {
-        setAccountsCreation({
-          ...accountsCreation,
-          [data.accountName]: undefined,
-        });
       }
-    },
-    [drive, storageAccounts]
-  );
+
+      onStorageRequestSuccess?.("creating", accountName);
+    } catch (e) {
+      console.error(e);
+      onStorageRequestError?.("creating", accountName);
+
+      throw e;
+    } finally {
+      setAccountsCreation({
+        ...accountsCreation,
+        [data.accountName]: undefined,
+      });
+    }
+  };
 
   const updateFileByKey = (fileKey: string, updatedFile: ShadowFileData) => {
     const accountKeyString = updatedFile.storageAccount.toString();
