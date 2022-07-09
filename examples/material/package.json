@@ -78,10 +78,6 @@
   },
   "staticFiles": {
     "staticPath": "./src/static"
-  },
-  "targets": {
-    "frontend": {
-      "publicUrl": "https://shdw-drive.genesysgo.net/iEfzG3sxgC3GL6bjikAiK4DRAG5XFbuBsDy8ypy129w/"
-    }
   }
+ 
 }
