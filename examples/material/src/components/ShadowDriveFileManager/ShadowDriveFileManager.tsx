@@ -38,7 +38,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import format from "date-fns/format";
@@ -72,7 +72,9 @@ export const ShadowDriveFileManager: FunctionComponent<
   PropsWithChildren<{}>
 > = () => {
   const { t } = useTranslation();
-  const wallet = useAnchorWallet();
+  const wallet = useWallet();
+  const connection = useConnection();
+
   const [fileDeletionDialogOpen, setFileDeletionDialogOpen] = useState(false);
   const [accountDeletionDialogOpen, setAccountDeletionDialogOpen] =
     useState(false);
@@ -752,7 +754,6 @@ export const ShadowDriveFileManager: FunctionComponent<
               {t("delete-file-dialog-cancel-btn")}
             </Button>
             <Button
-              disabled
               onClick={() => {
                 deleteFile(selectedFile);
                 handleCloseFileDeletionDialog();
