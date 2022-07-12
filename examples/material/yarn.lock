@@ -4618,10 +4618,10 @@ react-refresh@^0.9.0:
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.9.0.tgz#71863337adc3e5c2f8a6bfddd12ae3bfe32aafbf"
   integrity sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==
 
-react-shadow-drive@0.1.10:
-  version "0.1.10"
-  resolved "https://registry.yarnpkg.com/react-shadow-drive/-/react-shadow-drive-0.1.10.tgz#6d58e714d131b8e594b8b03642c2aa7ba13737bf"
-  integrity sha512-ekCxmHHQ4Iv07/3rLleLf9aMnsX8cg0J3jN1nn5rJYsgKVlJgwQpxs6UDqri2Tk2EvQyq4JX9I2o5GK8PixovQ==
+react-shadow-drive@0.1.11:
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/react-shadow-drive/-/react-shadow-drive-0.1.11.tgz#9f22c569a143a490afcad7627d6fd4c911c32e20"
+  integrity sha512-C3ZehYBzZ5slzBA2TdLJsL48Op4I5DLsfg1JvyC+V+3pmZPrES+eRUhdd9xP0ry1TFwkE5Slju40xwEamza9jg==
 
 react-transition-group@^4.4.2:
   version "4.4.2"
