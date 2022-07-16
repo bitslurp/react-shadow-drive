@@ -32,13 +32,14 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Skeleton,
   Snackbar,
   Tab,
   Tabs,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import format from "date-fns/format";
@@ -68,12 +69,45 @@ const DialogSpinner = () => (
 );
 
 const drawerWidth = 400;
+
+const StorageSkeleton = () => {
+  const [primaryWidth] = useState(100 + Math.ceil(Math.random() * 70));
+  const [secondaryWidth] = useState(210 + Math.ceil(Math.random() * 40));
+
+  return (
+    <ListItem>
+      <ListItemAvatar>
+        <Skeleton variant="circular" width={40} height={40} />
+      </ListItemAvatar>
+
+      <ListItemText
+        primary={<Skeleton variant="text" width={primaryWidth} />}
+        secondary={<Skeleton variant="text" width={secondaryWidth} />}
+      />
+    </ListItem>
+  );
+};
+
+const FileSkeleton = () => {
+  const [primaryWidth] = useState(100 + Math.ceil(Math.random() * 120));
+  return (
+    <ListItem>
+      <ListItemAvatar>
+        <Skeleton variant="circular" width={40} height={40} />
+      </ListItemAvatar>
+
+      <ListItemText
+        primary={<Skeleton variant="text" width={primaryWidth} />}
+      />
+    </ListItem>
+  );
+};
+
 export const ShadowDriveFileManager: FunctionComponent<
   PropsWithChildren<{}>
 > = () => {
   const { t } = useTranslation();
   const wallet = useWallet();
-  const connection = useConnection();
 
   const [fileDeletionDialogOpen, setFileDeletionDialogOpen] = useState(false);
   const [accountDeletionDialogOpen, setAccountDeletionDialogOpen] =
@@ -121,7 +155,9 @@ export const ShadowDriveFileManager: FunctionComponent<
     isStorageActionPending,
     pendingStorageAccounts,
     loading,
+    loadingAccounts,
     storageAccounts,
+    fetchFile,
     reduceStorage,
     makeStorageAccountImmutable,
     refreshStorageAccounts,
@@ -194,6 +230,7 @@ export const ShadowDriveFileManager: FunctionComponent<
 
   const {
     deletingSelectedAccount,
+    fetchingFiles,
     pollingSelectedAccount,
     reducingSizeOfSelectedAccount,
   } = useMemo(() => {
@@ -203,6 +240,10 @@ export const ShadowDriveFileManager: FunctionComponent<
       reducingSizeOfSelectedAccount: isStorageActionPending(
         selectedAccountInfo,
         "reducingSize"
+      ),
+      fetchingFiles: isStorageActionPending(
+        selectedAccountInfo,
+        "fetchingFiles"
       ),
       pollingSelectedAccount: isStorageActionPending(
         selectedAccountInfo,
@@ -227,6 +268,15 @@ export const ShadowDriveFileManager: FunctionComponent<
     }
   };
 
+  const handleFetchFile = async (fileData: ShadowFileData) => {
+    const file = await fetchFile(fileData);
+
+    const a = document.createElement("a");
+    a.href = window.URL.createObjectURL(file);
+    a.download = file.name;
+    a.click();
+  };
+
   const drawer = (
     <Box style={{ flex: 1 }} sx={{ bgcolor: "background.paper" }}>
       <Box padding={2} paddingBottom={1}>
@@ -238,7 +288,22 @@ export const ShadowDriveFileManager: FunctionComponent<
           {t("file-manager-add-storage-btn")}
         </Button>
       </Box>
+
       <List sx={{ minWidth: 360, bgcolor: "background.paper" }}>
+        {loadingAccounts && (
+          <>
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+            <StorageSkeleton />
+          </>
+        )}
         {Object.values(pendingStorageAccounts).map(({ accountName }) => (
           <ListItem style={{ opacity: 0.6 }} key={accountName}>
             <ListItemAvatar>
@@ -311,7 +376,6 @@ export const ShadowDriveFileManager: FunctionComponent<
         sx={{ width: { md: drawerWidth }, flexShrink: { xs: 0 } }}
         aria-label={t("file-manager-storage-list")}
       >
-        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Drawer
           variant="temporary"
           open={displayMobileMenu}
@@ -414,6 +478,17 @@ export const ShadowDriveFileManager: FunctionComponent<
               </>
             )}
 
+          {pollingSelectedAccount && (
+            <Box marginBottom={2}>
+              <Alert severity="info" id="pollingAlert">
+                <AlertTitle>
+                  {t("file-manager-account-polling-notification-title")}
+                </AlertTitle>
+                {t("file-manager-account-polling-notification-message")}
+              </Alert>
+            </Box>
+          )}
+
           {selectedAccountInfo && (
             <Box style={{ display: "flex" }} marginBottom={2}>
               <div style={{ flex: 1 }}>
@@ -503,16 +578,7 @@ export const ShadowDriveFileManager: FunctionComponent<
               </Fab>
             </Tooltip>
           )}
-          {pollingSelectedAccount && (
-            <Box marginBottom={2}>
-              <Alert severity="info" id="pollingAlert">
-                <AlertTitle>
-                  {t("file-manager-account-polling-notification-title")}
-                </AlertTitle>
-                {t("file-manager-account-polling-notification-message")}
-              </Alert>
-            </Box>
-          )}
+
           {selectedAccountInfo?.to_be_deleted && (
             <Box marginBottom={2}>
               <Alert
@@ -549,20 +615,15 @@ export const ShadowDriveFileManager: FunctionComponent<
                 <Tab
                   label={
                     t("file-manager-account-files-tab") +
-                    ` (${selectedAccountFiles?.length || 0})`
+                    (fetchingFiles && !selectedAccountFiles?.length
+                      ? ""
+                      : ` (${selectedAccountFiles?.length || 0})`)
                   }
                   value="files"
                 />
-                {/* <Tab
-                  label={
-                    t("file-manager-account-deleted-files-tab") +
-                    ` (${selectedAccountDeletedFiles?.length || 0})`
-                  }
-                  value="deleted-files"
-                /> */}
               </Tabs>
               <TabPanel selected={selectedFileTab} value="files">
-                {!selectedAccountFiles?.length && (
+                {!fetchingFiles && !selectedAccountFiles?.length && (
                   <Typography>
                     {t("file-manager-account-files-empty")}
                   </Typography>
@@ -573,6 +634,18 @@ export const ShadowDriveFileManager: FunctionComponent<
                     opacity: selectedAccountInfo?.to_be_deleted ? 0.5 : 1,
                   }}
                 >
+                  {fetchingFiles && !selectedAccountFiles?.length && (
+                    <>
+                      <FileSkeleton />
+                      <FileSkeleton />
+                      <FileSkeleton />
+                      <FileSkeleton />
+                      <FileSkeleton />
+                      <FileSkeleton />
+                      <FileSkeleton />
+                      <FileSkeleton />
+                    </>
+                  )}
                   {selectedAccountInfo &&
                     selectedAccountFiles &&
                     selectedAccountFiles.map((fileData) => {
@@ -627,79 +700,6 @@ export const ShadowDriveFileManager: FunctionComponent<
                     })}
                 </List>
               </TabPanel>
-
-              {/* <TabPanel selected={selectedFileTab} value="deleted-files">
-                {!selectedAccountDeletedFiles?.length && (
-                  <Typography>
-                    {t("file-manager-account-deleted-files-empty")}
-                  </Typography>
-                )}
-                <List
-                  sx={{ width: "100%", bgcolor: "transparent" }}
-                  style={{
-                    opacity: selectedAccountInfo?.to_be_deleted ? 0.5 : 1,
-                  }}
-                >
-                  {selectedAccountInfo &&
-                    selectedAccountDeletedFiles &&
-                    selectedAccountDeletedFiles.map((fileData) => {
-                      const fileAccount = fileData.account;
-                      const storageAccount = selectedAccountInfo;
-                      const fileAcountPending =
-                        isFileActionPending(fileAccount);
-                      return (
-                        <ListItem
-                          key={fileAccount.name}
-                          secondaryAction={
-                            <IconButton
-                              disabled={
-                                storageAccount.to_be_deleted ||
-                                fileAcountPending
-                              }
-                              id="file-menu-button"
-                              aria-controls={menuOpen ? "file-menu" : undefined}
-                              aria-haspopup="true"
-                              aria-expanded={menuOpen ? "true" : undefined}
-                              onClick={(e) => {
-                                setSelectedFile(fileData);
-                                handleOpenMenu(e);
-                              }}
-                            >
-                              {fileAcountPending ? (
-                                <CircularProgress size={16} />
-                              ) : (
-                                <VertMenuIcon />
-                              )}
-                            </IconButton>
-                          }
-                        >
-                          <ListItemAvatar>
-                            <Avatar>
-                              {/(png|jpg|gif|jpeg)$/i.test(fileAccount.name) ? (
-                                <img
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    objectPosition: "center center",
-                                  }}
-                                  src={getShadowDriveFileUrl(fileAccount)}
-                                />
-                              ) : (
-                                <FileIcon />
-                              )}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={`${fileAccount.name} (${formatBytes(
-                              fileAccount.size
-                            )})`}
-                          />
-                        </ListItem>
-                      );
-                    })}
-                </List>
-              </TabPanel> */}
             </>
           )}
         </Box>
@@ -719,7 +719,7 @@ export const ShadowDriveFileManager: FunctionComponent<
             {t("add-storage-dialog-description")}
           </DialogContentText>
           <Box mt={2}>
-            <StorageAccountForm onSubmit={handleCreateAccount} />
+            <StorageAccountForm splTokenSelect onSubmit={handleCreateAccount} />
           </Box>
         </DialogContent>
         <DialogActions>
@@ -894,6 +894,10 @@ export const ShadowDriveFileManager: FunctionComponent<
           <MenuItem onClick={closeMenu(copyToClipboard)}>
             {t("file-menu-clipboard")}
           </MenuItem>
+
+          <MenuItem onClick={closeMenu(handleFetchFile)}>
+            {t("file-menu-download")}
+          </MenuItem>
           <MenuItem
             disabled={
               selectedAccountInfo.immutable || selectedAccountInfo.to_be_deleted
@@ -937,8 +941,9 @@ export const ShadowDriveFileManager: FunctionComponent<
         <FileUploadForm
           id="file-upload-dialog"
           title={t("file-upload-form-upload-title")}
-          onSubmit={async (files) => {
-            await uploadFiles(selectedAccountInfo, files);
+          encryptCheckbox
+          onSubmit={async (files, encrypt) => {
+            await uploadFiles(selectedAccountInfo, files, encrypt);
             handleCloseFileUpload();
           }}
           open={fileUploadOpen}

@@ -4,8 +4,8 @@
   "file-manager-connect-wallet-intro": "Please connect your wallet to get started.",
   "file-manager-select-storage-account": "Select a storage space from the menu to start managing your files.",
   "file-manager-menu-button": "Menu",
-  "file-manager-storage-list": "Storage Folders",
-  "file-manager-file-deleting-success": "{{identifier}} marked for deletion",
+  "file-manager-storage-list": "Storage Spaces",
+  "file-manager-file-deleting-success": "{{identifier}} deleted!",
   "file-manager-file-deleting-error": "Error: Failed to mark {{identifier}} for deletion",
   "file-manager-file-cancellingDeletion-success": "{{identifier}} deletion has been cancelled",
   "file-manager-file-cancellingDeletion-error": "Error: Failed to cancel deletion of {{identifier}}",
@@ -38,7 +38,7 @@
   "file-manager-account-capacity": "{{availableSpace}} of {{totalSpace}} availale",
   "file-manager-account-created": "Created: {{date}}",
 
-  "file-manager-no-accounts-notification-title": "No storage folders found",
+  "file-manager-no-accounts-notification-title": "No storage spaces found",
   "file-manager-no-accounts-notification-message": "Please add some storage to enable file uploads.",
 
   "file-manager-account-deletion-notification-title": "To be deleted",
@@ -51,6 +51,7 @@
   "file-menu-clipboard": "Copy to clipboard",
   "file-menu-replace": "Replace",
   "file-menu-delete": "Delete",
+  "file-menu-download": "Download",
   "file-menu-cancel-delete": "Cancel Deletion",
 
   "file-upload-form-replace-title": "Replace File",
@@ -60,7 +61,7 @@
 
   "delete-account-dialog-title": "Delete Storage",
   "delete-account-dialog-description-deleting": "Marking Storage For Deletion...",
-  "delete-account-dialog-description": "Are you sure you want to delete this storage bucket and it's files?",
+  "delete-account-dialog-description": "Are you sure you want to delete this storage space and it's files?",
   "delete-account-dialog-confirm-btn": "Confirm",
   "delete-account-dialog-cancel-btn": "Close",
 
@@ -70,7 +71,7 @@
   "delete-file-dialog-cancel-btn": "Close",
 
   "add-storage-dialog-title": "Add Storage",
-  "add-storage-dialog-description": "Enter configuration for your new storage folder.",
+  "add-storage-dialog-description": "Enter configuration for your new storage space.",
   "add-storage-dialog-confirm-btn": "Create",
   "add-storage-dialog-cancel-btn": "Close",
 
