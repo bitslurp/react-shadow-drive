@@ -1,6 +1,7 @@
 import {
   Alert,
   Button,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -15,7 +16,6 @@ import React, {
   FunctionComponent,
   MutableRefObject,
   PropsWithChildren,
-  useCallback,
   useMemo,
   useRef,
   useState,
@@ -51,36 +51,41 @@ const rejectStyle = {
   borderColor: "#ff1744",
 };
 
-const textEncoder = new TextEncoder();
 export const FileUploadForm: FunctionComponent<
   PropsWithChildren<{
     id: string;
     maxFiles?: number;
-    onSubmit: (files: FileList) => Promise<void>;
+    encryptCheckbox?: boolean;
+    onSubmit: (files: File[], encrypt?: boolean) => Promise<void>;
     title: string;
     open: boolean;
     onClose: () => void;
   }>
-> = ({ children, id, title, maxFiles = 5, open, onClose, onSubmit }) => {
-  const [files, setFiles] = useState<FileList>();
+> = ({
+  encryptCheckbox,
+  children,
+  id,
+  title,
+  maxFiles = 5,
+  open,
+  onClose,
+  onSubmit,
+}) => {
+  const [files, setFiles] = useState<File[]>();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [encryptFiles, setEncryptFiles] = useState(false);
 
   const handleSnackbardClose = () => setSnackbarOpen(false);
 
   const ref: MutableRefObject<HTMLInputElement | null> =
     useRef<HTMLInputElement>(null);
-  const onDrop = useCallback(
-    (
-      _acceptedFiles: File[],
-      _fileRejections: FileRejection[],
-      event: DropEvent
-    ) => {
-      if (!ref.current?.files?.length) return;
-
-      setFiles(ref.current.files);
-    },
-    []
-  );
+  const onDrop = (
+    acceptedFiles: File[],
+    _fileRejections: FileRejection[],
+    event: DropEvent
+  ) => {
+    setFiles(acceptedFiles);
+  };
 
   const {
     isFocused,
@@ -110,7 +115,7 @@ export const FileUploadForm: FunctionComponent<
 
     try {
       setSubmitting(true);
-      await onSubmit(files);
+      await onSubmit(files, encryptFiles);
       setFiles(undefined);
     } catch {
       setSnackbarOpen(true);
@@ -121,6 +126,7 @@ export const FileUploadForm: FunctionComponent<
 
   const handleClose = () => {
     setFiles(undefined);
+    setEncryptFiles(false);
     onClose();
   };
 
@@ -136,7 +142,7 @@ export const FileUploadForm: FunctionComponent<
         onClose={handleClose}
       >
         <DialogTitle id={`${id}-title`}>{title}</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pb: 0 }}>
           <DialogContentText id={`${id}-description`}>
             {!submitting && children}
           </DialogContentText>
@@ -187,6 +193,26 @@ export const FileUploadForm: FunctionComponent<
                   Reset
                 </Button>
               </Box>
+            </Box>
+          )}
+
+          {encryptCheckbox && (
+            <Box
+              display="flex"
+              flexDirection="row"
+              alignItems="center"
+              justifyContent="flex-end"
+              mt={2}
+            >
+              <Checkbox
+                id="encrypt"
+                aria-label="encrypt files"
+                checked={encryptFiles}
+                onChange={(_e, checked) => setEncryptFiles(checked)}
+              />
+              <Typography component="label" htmlFor="encrypt">
+                Encrypt Files
+              </Typography>
             </Box>
           )}
         </DialogContent>

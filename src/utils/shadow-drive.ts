@@ -1,3 +1,4 @@
+import * as anchor from "@project-serum/anchor";
 import {
   ShdwDrive,
   StorageAccountInfo,
@@ -7,23 +8,35 @@ import { PublicKey } from "@solana/web3.js";
 
 const SHDW_DRIVE_ENDPOINT = "https://shadow-storage.genesysgo.net";
 
+export type ShadowStorageConfig = {
+  shadesPerGib: anchor.BN;
+  storageAvailable: anchor.BN;
+  admin2: PublicKey;
+  tokenAccount: PublicKey;
+  uploader: PublicKey;
+  mutableFeeStartEpoch: anchor.BN;
+  shadesPerGibPerEpoch: anchor.BN;
+  crankBps: number;
+  maxAccountSize: anchor.BN;
+  minAccountSize: anchor.BN;
+};
+
 export type ShadowFileData = {
   name: string;
   storageAccount: PublicKey;
 };
 
-const GB_BYTES = 1_073_741_824;
+const GIB_BYTES = 1_073_741_824;
 const MB_BYTES = 1_048_576;
 const KB_BYTES = 1_024;
-const PRICE_PER_GB = 250_000_000;
 
 export const formatBytes = (bytes: number) => {
   if (bytes < MB_BYTES) {
     return `${(bytes / KB_BYTES).toFixed(2)}KB`;
-  } else if (bytes < GB_BYTES) {
+  } else if (bytes < GIB_BYTES) {
     return `${(bytes / MB_BYTES).toFixed(2)}MB`;
   } else {
-    return `${(bytes / GB_BYTES).toFixed(2)}GB`;
+    return `${(bytes / GIB_BYTES).toFixed(2)}GB`;
   }
 };
 
@@ -139,31 +152,21 @@ export async function pollRequest<T>(
   }
 }
 
-export function toShdwCost(input: string): number {
-  let chunk_size = 0;
-  let humanReadable = input.toLowerCase();
-  let inputNumber = Number(humanReadable.slice(0, humanReadable.length - 2));
-  let inputDescriptor = humanReadable.slice(
+const bytesPerUnit: Record<string, number> = {
+  kb: KB_BYTES,
+  mb: MB_BYTES,
+  gb: GIB_BYTES,
+};
+
+export function toShdwCost(shadesPerGib: number, input: string): number {
+  const humanReadable = input.toLowerCase();
+  const inputNumber = Number(humanReadable.slice(0, humanReadable.length - 2));
+  const inputDescriptor = humanReadable.slice(
     humanReadable.length - 2,
     humanReadable.length
   );
-
-  switch (inputDescriptor) {
-    case "kb":
-      chunk_size = KB_BYTES;
-      break;
-    case "mb":
-      chunk_size = MB_BYTES;
-      break;
-    case "gb":
-      chunk_size = GB_BYTES;
-      break;
-
-    default:
-      break;
-  }
-
+  const chunk_size = bytesPerUnit[inputDescriptor] || 0;
   const bytes = inputNumber * chunk_size;
 
-  return Math.ceil((bytes / GB_BYTES) * PRICE_PER_GB);
+  return Math.ceil((bytes / GIB_BYTES) * shadesPerGib);
 }

@@ -51,6 +51,7 @@
   "file-menu-clipboard": "Copy to clipboard",
   "file-menu-replace": "Replace",
   "file-menu-delete": "Delete",
+  "file-menu-download": "Download",
   "file-menu-cancel-delete": "Cancel Deletion",
 
   "file-upload-form-replace-title": "Replace File",

@@ -12,11 +12,13 @@ import type { StorageAccountData } from "react-shadow-drive";
 
 export type AccountFormProps = {
   onSubmit: (data: StorageAccountData) => void;
+  splTokenSelect?: boolean;
   spaceOnly?: boolean;
 };
 
 export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
   spaceOnly,
+  splTokenSelect,
   onSubmit,
 }) => {
   const { control, handleSubmit } = useForm<StorageAccountData>({
@@ -74,24 +76,26 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         />
       </Box>
 
-      <Controller
-        name="paymentToken"
-        control={control}
-        render={({ field }) => (
-          <FormControl variant="standard" sx={{ minWidth: "150px" }}>
-            <InputLabel id="payment-token-label">Payment Token</InputLabel>
-            <Select
-              labelId="payment-token-label"
-              label="Payment Token"
-              {...field}
-            >
-              <MenuItem value="SHDW">SHDW</MenuItem>
-              <MenuItem value="SOL">SOL</MenuItem>
-              <MenuItem value="USDC">USDC</MenuItem>
-            </Select>
-          </FormControl>
-        )}
-      />
+      {splTokenSelect && (
+        <Controller
+          name="paymentToken"
+          control={control}
+          render={({ field }) => (
+            <FormControl variant="standard" sx={{ minWidth: "150px" }}>
+              <InputLabel id="payment-token-label">Payment Token</InputLabel>
+              <Select
+                labelId="payment-token-label"
+                label="Payment Token"
+                {...field}
+              >
+                <MenuItem value="SHDW">SHDW</MenuItem>
+                <MenuItem value="SOL">SOL</MenuItem>
+                <MenuItem value="USDC">USDC</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+        />
+      )}
     </form>
   );
 };
