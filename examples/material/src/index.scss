@@ -1,4 +1,5 @@
 @import "../node_modules/@solana/wallet-adapter-react-ui/styles";
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
 
 body {
   margin: 0;
@@ -32,4 +33,8 @@ body,
   background: #ddd;
   border-radius: 4px;
   margin: 1px;
+}
+
+.bit-font {
+  font-family: "VT323", monospace;
 }

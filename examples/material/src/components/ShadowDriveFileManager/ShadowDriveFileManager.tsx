@@ -438,9 +438,11 @@ export const ShadowDriveFileManager: FunctionComponent<
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {t("file-manager-title")}
-          </Typography>
+          <Box flexGrow={1}>
+            <h1 style={{ margin: 0 }} className="bit-font">
+              {t("file-manager-title")}
+            </h1>
+          </Box>
           <WalletMultiButton />
         </AppBar>
         {pollingSelectedAccount && (
