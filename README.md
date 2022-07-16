@@ -4,7 +4,7 @@ A react hook and some helpers/extra typing for [GenesysGo's](https://shdw.genesy
 
 Note: Package API subject to change often in near future
 
-[Material UI Example App](bitslurp.me/files)
+[Material UI Example App](https://bitslurp.me/files)
 
 The example app was uploaded via itself to ShadowDrive. So there.
 
