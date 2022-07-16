@@ -22,7 +22,7 @@
   "scripts": {
     "clean": "shx rm -rf dist .parcel-cache",
     "build": "yarn clean && parcel build src/index.html",
-    "build:prod": "yarn clean && parcel build src/index.html --public-url 'https://shdw-drive.genesysgo.net/iEfzG3sxgC3GL6bjikAiK4DRAG5XFbuBsDy8ypy129w/'",
+    "build:prod": "yarn clean && parcel build src/index.html --public-url 'https://bitslurp.me/files'",
     "start": "yarn clean && parcel src/index.html",
     "fmt": "prettier --write '{*,**/*}.{js,ts,jsx,tsx,json}'",
     "lint": "eslint . && prettier --check '{*,**/*}.{js,ts,jsx,tsx,json}'",
