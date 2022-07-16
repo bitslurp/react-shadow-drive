@@ -21,7 +21,11 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
   splTokenSelect,
   onSubmit,
 }) => {
-  const { control, handleSubmit } = useForm<StorageAccountData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<StorageAccountData>({
     defaultValues: {
       accountName: "",
       storageSpace: "",
@@ -36,11 +40,13 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
           <Controller
             name="accountName"
             control={control}
+            rules={{ required: true }}
             render={({ field }) => (
               <TextField
                 {...field}
+                error={!!errors["accountName"]}
                 sx={{ marginRight: 3 }}
-                label="Folder Name"
+                label="Stoage Space Name"
                 variant="standard"
               />
             )}
@@ -50,9 +56,11 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         <Controller
           name="storageSpace"
           control={control}
+          rules={{ required: true }}
           render={({ field }) => (
             <TextField
               {...field}
+              error={!!errors["storageSpace"]}
               type="number"
               label="Storage Space"
               variant="standard"
@@ -63,10 +71,16 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         <Controller
           name="storageUnit"
           control={control}
+          rules={{ required: true }}
           render={({ field }) => (
             <FormControl variant="standard">
               <InputLabel id="unit-select-label">Unit</InputLabel>
-              <Select labelId="unit-select-label" label="Unit" {...field}>
+              <Select
+                labelId="unit-select-label"
+                error={!!errors["storageUnit"]}
+                label="Unit"
+                {...field}
+              >
                 <MenuItem value="KB">kb</MenuItem>
                 <MenuItem value="MB">mb</MenuItem>
                 <MenuItem value="GB">gb</MenuItem>
