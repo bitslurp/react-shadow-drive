@@ -943,6 +943,7 @@ export const ShadowDriveFileManager: FunctionComponent<
         <FileUploadForm
           id="file-upload-dialog"
           title={t("file-upload-form-upload-title")}
+          encryptCheckbox
           onSubmit={async (files, encrypt) => {
             await uploadFiles(selectedAccountInfo, files, encrypt);
             handleCloseFileUpload();
