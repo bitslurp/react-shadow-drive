@@ -26,12 +26,12 @@ import {
 
 const SHDW_DRIVE_VERSION = "v2";
 
-type PaymentTokenOptions = "SOL" | "USDC" | "SHDW";
+export type PaymentTokenOption = "SOL" | "USDC" | "SHDW";
 export type StorageAccountData = {
   accountName: string;
   storageSpace: string;
   storageUnit: string;
-  paymentToken?: PaymentTokenOptions;
+  paymentToken?: PaymentTokenOption;
 };
 
 export type StorageAccountAction =
@@ -150,7 +150,9 @@ export type UseShadowDriveReturnValue = {
   /**
    * Add a new storage accout
    */
-  createStorageAccount: (data: StorageAccountData) => Promise<void>;
+  createStorageAccount: (
+    data: StorageAccountData
+  ) => Promise<StorageAccountInfo>;
   /**
    * Mark a file for deletion
    */
@@ -178,14 +180,16 @@ export type UseShadowDriveReturnValue = {
   /**
    * Refresh account belonging to active wallet/connection
    */
-  refreshStorageAccounts: () => Promise<void>;
+  refreshStorageAccounts: () => Promise<StorageAccountInfo[]>;
   /**
    * Refresh data for an individual account
    */
   refreshStorageAccount: (
     accountResponse: StorageAccountInfo
   ) => Promise<StorageAccountInfo>;
-  refreshStorageAccountFiles: (account: StorageAccountInfo) => Promise<void>;
+  refreshStorageAccountFiles: (
+    account: StorageAccountInfo
+  ) => Promise<ShadowFileData[]>;
   /**
    * Replace a file, assuming it's mutable, for a storage account
    */
@@ -221,7 +225,7 @@ export function useShadowDrive({
   onStorageAccountRefreshError,
   onStorageRequestError,
   onStorageRequestSuccess,
-}: UseShadowDriveOptions): UseShadowDriveReturnValue {
+}: UseShadowDriveOptions = {}): UseShadowDriveReturnValue {
   const { connection } = useConnection();
   const wallet = useWallet();
   const [loading, setLoading] = useState(false);
@@ -319,6 +323,8 @@ export function useShadowDrive({
         ...filesByKey,
         [account.storage_account.toString()]: files,
       });
+
+      return files;
     } catch (e) {
       //
     } finally {
@@ -395,6 +401,7 @@ export function useShadowDrive({
       );
 
       setStorageAccounts(accounts);
+      return accounts;
     } catch (e) {
       console.error(e);
 
@@ -434,6 +441,7 @@ export function useShadowDrive({
       try {
         const account = await getStorageAccount(publicKey);
         setStorageAccounts(storageAccounts.concat(account));
+        return account;
       } catch (e) {
         //
         console.error(e);
@@ -525,7 +533,7 @@ export function useShadowDrive({
       } else {
         response = await drive.uploadMultipleFiles(
           storageAccountInfo.storage_account,
-          files as FileList
+          files as any as FileList
         );
       }
 
@@ -841,13 +849,14 @@ export function useShadowDrive({
 
       const drive = await new ShdwDrive(connection, wallet).init();
 
-      const [storageConfig] = (await (
-        drive as any
-      ).program.account.storageConfig.all()) as {
-        account: ShadowStorageConfig;
-      }[];
+      (
+        (drive as any).program.account.storageConfig.all() as Promise<
+          {
+            account: ShadowStorageConfig;
+          }[]
+        >
+      ).then((storageConfigs) => setStorageConfig(storageConfigs[0].account));
 
-      setStorageConfig(storageConfig.account);
       setDrive(drive);
     } catch (e) {
       console.error(e);
