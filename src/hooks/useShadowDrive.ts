@@ -26,12 +26,12 @@ import {
 
 const SHDW_DRIVE_VERSION = "v2";
 
-type PaymentTokenOptions = "SOL" | "USDC" | "SHDW";
+export type PaymentTokenOption = "SOL" | "USDC" | "SHDW";
 export type StorageAccountData = {
   accountName: string;
   storageSpace: string;
   storageUnit: string;
-  paymentToken?: PaymentTokenOptions;
+  paymentToken?: PaymentTokenOption;
 };
 
 export type StorageAccountAction =
@@ -849,13 +849,14 @@ export function useShadowDrive({
 
       const drive = await new ShdwDrive(connection, wallet).init();
 
-      const [storageConfig] = (await (
-        drive as any
-      ).program.account.storageConfig.all()) as {
-        account: ShadowStorageConfig;
-      }[];
+      (
+        (drive as any).program.account.storageConfig.all() as Promise<
+          {
+            account: ShadowStorageConfig;
+          }[]
+        >
+      ).then((storageConfigs) => setStorageConfig(storageConfigs[0].account));
 
-      setStorageConfig(storageConfig.account);
       setDrive(drive);
     } catch (e) {
       console.error(e);
