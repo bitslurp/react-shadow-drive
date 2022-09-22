@@ -40,13 +40,14 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
           <Controller
             name="accountName"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: { value: true, message: "Name required" } }}
             render={({ field }) => (
               <TextField
                 {...field}
-                error={!!errors["accountName"]}
+                error={!!errors.accountName}
                 sx={{ marginRight: 3 }}
-                label="Stoage Space Name"
+                helperText={errors.accountName?.message}
+                label="Space Name"
                 variant="standard"
               />
             )}
@@ -56,13 +57,17 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
         <Controller
           name="storageSpace"
           control={control}
-          rules={{ required: true }}
+          rules={{
+            required: { value: true, message: "Enter an amount" },
+            min: { value: 1, message: "Min value of 1" },
+          }}
           render={({ field }) => (
             <TextField
               {...field}
-              error={!!errors["storageSpace"]}
+              error={!!errors.storageSpace}
+              helperText={errors.storageSpace?.message}
               type="number"
-              label="Storage Space"
+              label="Amount"
               variant="standard"
             />
           )}
@@ -77,7 +82,7 @@ export const StorageAccountForm: FunctionComponent<AccountFormProps> = ({
               <InputLabel id="unit-select-label">Unit</InputLabel>
               <Select
                 labelId="unit-select-label"
-                error={!!errors["storageUnit"]}
+                error={!!errors.storageUnit}
                 label="Unit"
                 {...field}
               >
