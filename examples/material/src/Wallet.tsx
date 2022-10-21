@@ -38,7 +38,7 @@ export const Wallet: FC<PropsWithChildren<{}>> = ({ children }) => {
   return (
     <ConnectionProvider
       config={{ commitment: "max" }}
-      endpoint="https://ssc-dao.genesysgo.net/"
+      endpoint="https://solana-api.projectserum.com"
     >
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
