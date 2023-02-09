@@ -96,14 +96,16 @@ export const getShadowDriveFileUrl = ({
 export const accountResponseToInfo = ({
   publicKey,
   account,
+  version
 }: StorageAccountResponse): StorageAccountInfo => ({
   storage_account: publicKey,
   reserved_bytes: account.storage,
   current_usage: account.storageAvailable,
   immutable: account.immutable,
   to_be_deleted: account.toBeDeleted,
-  delet_request_epoch: account.deleteRequestEpoch,
+  delete_request_epoch: account.deleteRequestEpoch,
   owner1: account.owner1,
+  version: version,
   account_counter_seed: account.accountCounterSeed,
   creation_time: account.creationTime,
   creation_epoch: account.creationEpoch,
