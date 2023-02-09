@@ -1,6 +1,6 @@
 {
   "name": "react-shadow-drive",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Simple React Hook/Utils for GenesysGo ShadowDrive",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -26,24 +26,24 @@
   },
   "devDependencies": {
     "@project-serum/anchor": "^0.24.2",
-    "@shadow-drive/sdk": "^3.0.8",
-    "@solana/wallet-adapter-react": "0.15.5",
-    "@types/jest": "^27.5.0",
-    "@types/node": "^17.0.31",
-    "@types/react": "^18.0.9",
+    "@shadow-drive/sdk": "^3.1.0",
+    "@solana/wallet-adapter-react": "^0.15.28",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^17.0.45",
+    "@types/react": "^18.0.27",
     "jest": "^28.1.0",
     "jest-config": "^28.1.0",
-    "parcel": "^2.6.2",
-    "react": "^18.1.0",
-    "ts-jest": "^28.0.2",
+    "parcel": "^2.8.3",
+    "react": "^18.2.0",
+    "ts-jest": "^28.0.8",
     "ts-jest-resolver": "^2.0.0",
-    "typedoc": "^0.22.15",
-    "typescript": "^4.6.4"
+    "typedoc": "^0.23.24",
+    "typescript": "^4.9.5"
   },
   "peerDependencies": {
     "@project-serum/anchor": "*",
-    "@shadow-drive/sdk": "*",
-    "@solana/wallet-adapter-react": "*",
+    "@shadow-drive/sdk": "^3.1.0",
+    "@solana/wallet-adapter-react": "^0.15.28",
     "react": "^17.0.0 || ^18"
   }
 }
