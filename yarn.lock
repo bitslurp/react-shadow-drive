@@ -1271,10 +1271,10 @@
   dependencies:
     merge-options "^3.0.4"
 
-"@shadow-drive/sdk@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-3.1.0.tgz#fc8b507f0a42b9e1c7d25e0fd2f5cc736f8ec79a"
-  integrity sha512-IL7PIbXSXnHFX1W8+Vy5v59dhXe7GEpAA3XBkyaKI4jmTTc1UBIa75TcsZXHHISkqxr4UqnkVtO+qcLeslCiyw==
+"@shadow-drive/sdk@^3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@shadow-drive/sdk/-/sdk-3.1.1.tgz#f4dc7c2d98fd0b220ca5f1c6041292eae6a3293d"
+  integrity sha512-Y0aXw6J98SD/6tyog+LP/NNujhIGgIfmeU2q929TUAO/b05c3SXofT4s0caDaosCaH5mwUtUwKNarKWLdX37aA==
   dependencies:
     "@project-serum/anchor" "^0.24.2"
     "@solana/spl-token" "^0.2.0"
