@@ -37,7 +37,7 @@ export const Wallet: FC<PropsWithChildren<{}>> = ({ children }) => {
 
   return (
     <ConnectionProvider
-      config={{ commitment: "max" }}
+      config={{ commitment: "processed" }}
       endpoint="https://rpc.helius.xyz/?api-key=604a664f-28e3-43f5-97b2-d8ca1bdb499e"
     >
       <WalletProvider wallets={wallets} autoConnect>
