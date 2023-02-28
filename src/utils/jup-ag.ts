@@ -1,5 +1,10 @@
 import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Connection, Transaction } from "@solana/web3.js";
+import {
+  AddressLookupTableAccount,
+  Connection,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 
 const mints = {
   USDC: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -16,9 +21,10 @@ export const swapToShdw = async (
 
   paymentToken: "SOL" | "USDC"
 ) => {
+  const mint = mints[paymentToken];
   const { data } = await (
     await fetch(
-      `https://quote-api.jup.ag/v1/quote?inputMint=${mints[paymentToken]}&outputMint=SHDWyBxihqiCj6YekG2GUr7wqKLeLAMK1gHZck9pL6y&amount=${amount}&swapMode=ExactOut&slippage=1`
+      `https://quote-api.jup.ag/v4/quote?inputMint=${mint}&outputMint=SHDWyBxihqiCj6YekG2GUr7wqKLeLAMK1gHZck9pL6y&amount=${amount}&swapMode=ExactOut&slippageBps=1`
     )
   ).json();
   const routes = data;
@@ -27,7 +33,7 @@ export const swapToShdw = async (
 
   // get serialized transactions for the swap
   const transactions = await (
-    await fetch("https://quote-api.jup.ag/v1/swap", {
+    await fetch("https://quote-api.jup.ag/v4/swap", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -40,13 +46,33 @@ export const swapToShdw = async (
     })
   ).json();
 
-  const { setupTransaction, swapTransaction, cleanupTransaction } =
-    transactions;
+  const { swapTransaction } = transactions;
 
-  if (setupTransaction || cleanupTransaction)
-    throw new Error("should only be 1tx");
+  const swapTransactionBuf = Buffer.from(swapTransaction, "base64");
+  const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
-  const transaction = Transaction.from(Buffer.from(swapTransaction, "base64"));
+  const addressLookupTableAccounts = await Promise.all(
+    transaction.message.addressTableLookups.map(async (lookup) => {
+      return new AddressLookupTableAccount({
+        key: lookup.accountKey,
+        state: AddressLookupTableAccount.deserialize(
+          await connection
+            .getAccountInfo(lookup.accountKey)
+            .then((res) => res.data)
+        ),
+      });
+    })
+  );
+
+  // console.log(addressLookupTableAccounts)
+
+  // decompile transaction message and add transfer instruction
+  var message = TransactionMessage.decompile(transaction.message, {
+    addressLookupTableAccounts: addressLookupTableAccounts,
+  });
+
+  // compile the message and update the transaction
+  transaction.message = message.compileToV0Message(addressLookupTableAccounts);
 
   return await wallet.sendTransaction(transaction, connection);
 };
