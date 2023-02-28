@@ -35,7 +35,7 @@
   "file-manager-delete-account-btn": "Delete Storage Space",
   "file-manager-upload-btn": "Upload Files",
 
-  "file-manager-account-capacity": "{{availableSpace}} of {{totalSpace}} availale",
+  "file-manager-account-capacity": "{{availableSpace}} of {{totalSpace}} available",
   "file-manager-account-created": "Created: {{date}}",
 
   "file-manager-no-accounts-notification-title": "No storage spaces found",
